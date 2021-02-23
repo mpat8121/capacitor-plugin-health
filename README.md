@@ -16,6 +16,7 @@ npx cap sync
 * [`isAvailable()`](#isavailable)
 * [`requestAuth()`](#requestauth)
 * [`query()`](#query)
+* [`store()`](#store)
 
 </docgen-index>
 
@@ -25,10 +26,10 @@ npx cap sync
 ### isAvailable()
 
 ```typescript
-isAvailable() => any
+isAvailable() => Promise<any>
 ```
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise<any></code>
 
 --------------------
 
@@ -36,20 +37,30 @@ isAvailable() => any
 ### requestAuth()
 
 ```typescript
-requestAuth() => any
+requestAuth() => Promise<any>
 ```
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise<any></code>
 
 --------------------
 
 ### query()
 
 ```typescript
-query() => any
+query() => Promise<any>
 ```
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise<any></code>
+
+--------------------
+
+### store()
+
+```typescript
+store() => Promise<any>
+```
+
+**Returns:** <code>Promise<any></code>
 
 --------------------
 
