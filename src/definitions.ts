@@ -1,3 +1,6 @@
 export interface HealthPlugin {
-  echo(options: { value: string }): Promise<{ value: string }>;
+  isAvailable(): Promise<boolean>;
+  requestAuth(): Promise<boolean>;
+  query(): Promise<any>;
+  store(): Promise<any>;
 }
