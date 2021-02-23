@@ -7,6 +7,7 @@ let allTypes = Set([
             HKObjectType.quantityType(forIdentifier: .height)!,
             HKObjectType.quantityType(forIdentifier: .bodyMass)!,
             HKObjectType.quantityType(forIdentifier: .bodyMassIndex)!,
+            HKObjectType.quantityType(forIdentifier: .leanBodyMass),
             HKObjectType.quantityType(forIdentifier: .bodyFatPercentage)!,
             HKObjectType.quantityType(forIdentifier: .waistCircumference)!
             ])
@@ -18,22 +19,7 @@ let allTypes = Set([
 public class HealthPlugin: CAPPlugin {
     private let implementation = Health()
 
-    func getType(typeName: String) -> HKSampleType? {
-        switch typeName {
-            case "height":
-                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)
-            case "weight":
-                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)
-            case "bmi":
-                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)
-            case "bodyFat":
-                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)
-            case "waist":
-                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)
-        default:
-            return nil;
-        }
-    }
+    
 
     @objc func isAvailable(_ call: CAPPluginCall) {
         if HKHealthStore.isHealthDataAvailable() {
@@ -78,46 +64,22 @@ public class HealthPlugin: CAPPlugin {
         
         let predicate = HKQuery.predicateForSamples(withStart: _start, end: _end, options: HKQueryOptions.strictStartDate)
 
-        guard let sampleType: HKSampleType = getType(typeName: dataType) else {
+        guard let sampleType: HKSampleType = getQuantityType(typeName: dataType) else {
             return call.reject("Error in sample name")
         }
 
         let query = HKSampleQuery(sampleType: sampleType, predicate: nil, limit: limit, sortDescriptors: nil) {
             query, results, error in
-
             guard let samples = results as? [HKQuantitySample] else {
+                call.reject("Error getting data")
                 return
             }
-            var output: [[String: Any]] = []
-            for result in samples {
-                
-                var unitName: String?
-                var unit: HKUnit?
-                if result.quantity.is(compatibleWith: HKUnit.meter()) {
-                    unitName = "metre"
-                    unit = HKUnit.meter()
-                } else if result.quantity.is(compatibleWith: HKUnit.gram()) {
-                    unitName = "gram"
-                    unit = HKUnit.gram()
-                } else if result.quantity.is(compatibleWith: HKUnit.percent()) {
-                    unitName = "percentage"
-                    unit = HKUnit.percent()
-                } else {
-                    print("Error: unit type: ", result.quantity)
-                }
-                let value = result.quantity.doubleValue(for: unit!)
-                output.append(["start": ISO8601DateFormatter().string(from: result.startDate),
-                               "end": ISO8601DateFormatter().string(from: result.endDate),
-                               "units": unitName,
-                               "value": value
-                ])
-            }
+            let output = processResult(results: samples)
             call.resolve([
                 "resultCount": output.count,
                 "resultData": output
             ])
         }
-
         healthStore.execute(query)
     }
 
@@ -145,17 +107,107 @@ public class HealthPlugin: CAPPlugin {
         
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: HKQueryOptions.strictStartDate)
 
-        let quantityType = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)
-        let entryData = HKQuantitySample.init(type: quantityType!,
-        quantity: HKQuantity.init(unit: HKUnit.pound(), doubleValue: value),
+        let quantityType = getObjectType(typeName: dataType)
+        let newData = HKQuantitySample.init(type: quantityType.type!,
+        quantity: HKQuantity.init(unit: quantityType.unit, doubleValue: value),
         start: start,
         end: end)
-        healthStore.save(entryData) {
+        healthStore.save(newData) {
             success, error in
             if(error != nil) {
                 call.reject("An error occurred")
             }
             call.resolve(["success": success])
         }
+    }
+
+    func getQuantityType(typeName: String) -> HKSampleType? {
+        switch typeName {
+            case "height":
+                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)
+            case "weight":
+                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)
+            case "leanMass":
+                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)
+            case "bmi":
+                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)
+            case "bodyFat":
+                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)
+            case "waist":
+                return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)
+        default:
+            return nil;
+        }
+    }
+
+    func getObjectType(typeName: String) -> HKSampleType? {
+        var output: [[String: Any]] = [];
+        switch typeName {
+            case "height":
+                output.append([
+                    "unit": HKUnit.meter(),
+                    "type": HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)
+                ])
+                return output
+            case "weight":
+                output.append([
+                    "unit": HKUnit.gram(),
+                    "type": HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)
+                ])
+                return output
+            case "leanMass":
+                output.append([
+                    "unit": HKUnit.gram(),
+                    "type": HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)
+                ])
+                return output
+            case "bmi":
+                output.append([
+                    "unit": HKUnit.gram(),
+                    "type": HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)
+                ])
+                return output
+            case "bodyFat":
+                 output.append([
+                    "unit": HKUnit.percent(),
+                    "type": HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)
+                ])
+                return output
+            case "waist":
+                output.append([
+                    "unit": HKUnit.meter(),
+                    "type": HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)
+                ])
+                return output
+        default:
+            return nil;
+        }
+    }
+
+    func processResult(results: [HKQuantitySample]) {
+        var output: [[String: Any]] = []
+        for result in results {
+            var unitName: String?
+                var unit: HKUnit?
+                if result.quantity.is(compatibleWith: HKUnit.meter()) {
+                    unitName = "metre"
+                    unit = HKUnit.meter()
+                } else if result.quantity.is(compatibleWith: HKUnit.gram()) {
+                    unitName = "gram"
+                    unit = HKUnit.gram()
+                } else if result.quantity.is(compatibleWith: HKUnit.percent()) {
+                    unitName = "percentage"
+                    unit = HKUnit.percent()
+                } else {
+                    print("Error: unit type: ", result.quantity)
+                }
+                let value = result.quantity.doubleValue(for: unit!)
+                output.append(["start": ISO8601DateFormatter().string(from: result.startDate),
+                               "end": ISO8601DateFormatter().string(from: result.endDate),
+                               "units": unitName,
+                               "value": value
+                ])
+        }
+        return output
     }
 }
