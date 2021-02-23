@@ -94,6 +94,42 @@ public class HealthPlugin: CAPPlugin {
     }
 
     @obj func store(_ call: CAPPlugin) {
+        guard let value = call.options["value"] as? String else {
+            call.reject("Must provide a value")
+            return
+        }
+        guard let start = call.options["startDate"] as? String else {
+            call.reject("Must provide start date")
+            return
+        }
+        guard let end = call.options["endDate"] as? String else {
+            call.reject("Must provide end date")
+            return
+        }
+        guard let dataType = call.options["dataType"] as? String else {
+            return call.reject("Must provide data type")
+        }
+        guard let _limit = call.options["limit"] as? String else {
+            return call.reject("Must provide limit")
+        }
 
+        let limit: Int = (_limit == 0) ? HKObjectQueryNoLimit : _limit
+        
+        let predicate = HKQuery.predicateForSamples(withStart: _start, end: _end, options: HKQueryOptions.strictStartDate)
+
+        guard let quantityType: HKSampleType = getType(sampleName: dataType) else {
+            return call.reject("Error in sample name")
+        }
+        let entryData = HKQuantitySample.init(type: quantityType!,
+        quantity: HKQuantity.init(unit: HKUnit.pound(), doubleValue: bodyMass),
+        start: start,
+        end: end)
+        healthKitStore.save(entryData) {
+            success, error in
+            if(error != nil) {
+                call.reject(error)
+            }
+            call.resolve(success)
+        }
     }
 }

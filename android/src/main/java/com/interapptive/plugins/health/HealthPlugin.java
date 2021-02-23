@@ -19,4 +19,10 @@ public class HealthPlugin extends Plugin {
         ret.put("value", implementation.echo(value));
         call.resolve(ret);
     }
+
+    @PluginMethod
+    public void isAvailable(PluginCall call) {
+        JSObject ret = new JSObject();
+        call.resolve(ret);
+    }
 }
