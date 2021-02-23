@@ -18,7 +18,7 @@ let allTypes = Set([
 public class HealthPlugin: CAPPlugin {
     private let implementation = Health()
 
-    func getType(typeName: String) {
+    func getType(typeName: String) -> HKSampleType? {
         switch typeName {
             case "height":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)
@@ -30,10 +30,12 @@ public class HealthPlugin: CAPPlugin {
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)
             case "waist":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)
+        default:
+            return nil;
         }
     }
 
-    @obj func isAvailable(_ call: CAPPluginCall) {
+    @objc func isAvailable(_ call: CAPPluginCall) {
         if HKHealthStore.isHealthDataAvailable() {
             call.resolve()
         } else {
@@ -41,7 +43,7 @@ public class HealthPlugin: CAPPlugin {
         }
     }
 
-    @obj func requestAuth(_ call: CAPPlugin) {
+    @objc func requestAuth(_ call: CAPPluginCall) {
         
         if(HKHealthStore.isHealthDataAvailable()) {
             healthStore.requestAuthorization(toShare: allTypes, read: allTypes) { (success, error) in 
@@ -56,19 +58,19 @@ public class HealthPlugin: CAPPlugin {
         }
     }
 
-    @obj func query(_ call: CAPPlugin) {
-        guard let _start = call.options["startDate"] as? String else {
+    @objc func query(_ call: CAPPluginCall) {
+        guard let _start = call.options["startDate"] as? Date else {
             call.reject("Must provide start date")
             return
         }
-        guard let _end = call.options["endDate"] as? String else {
+        guard let _end = call.options["endDate"] as? Date else {
             call.reject("Must provide end date")
             return
         }
         guard let dataType = call.options["dataType"] as? String else {
             return call.reject("Must provide data type")
         }
-        guard let _limit = call.options["limit"] as? String else {
+        guard let _limit = call.options["limit"] as? Int else {
             return call.reject("Must provide limit")
         }
 
@@ -76,7 +78,7 @@ public class HealthPlugin: CAPPlugin {
         
         let predicate = HKQuery.predicateForSamples(withStart: _start, end: _end, options: HKQueryOptions.strictStartDate)
 
-        guard let sampleType: HKSampleType = getType(sampleName: dataType) else {
+        guard let sampleType: HKSampleType = getType(typeName: dataType) else {
             return call.reject("Error in sample name")
         }
 
@@ -87,49 +89,47 @@ public class HealthPlugin: CAPPlugin {
                 return
             }
 
-            call.resolve(samples)
+            call.resolve(["data": samples])
         }
 
         healthStore.execute(query)
     }
 
-    @obj func store(_ call: CAPPlugin) {
-        guard let value = call.options["value"] as? String else {
+    @objc func store(_ call: CAPPluginCall) {
+        guard let value = call.options["value"] as? Double else {
             call.reject("Must provide a value")
             return
         }
-        guard let start = call.options["startDate"] as? String else {
+        guard let start = call.options["startDate"] as? Date else {
             call.reject("Must provide start date")
             return
         }
-        guard let end = call.options["endDate"] as? String else {
+        guard let end = call.options["endDate"] as? Date else {
             call.reject("Must provide end date")
             return
         }
         guard let dataType = call.options["dataType"] as? String else {
             return call.reject("Must provide data type")
         }
-        guard let _limit = call.options["limit"] as? String else {
+        guard let _limit = call.options["limit"] as? Int else {
             return call.reject("Must provide limit")
         }
 
-        let limit: Int = (_limit == 0) ? HKObjectQueryNoLimit : _limit
+        let limit: Int = (_limit == 0) ? HKObjectQueryNoLimit : _limit;
         
-        let predicate = HKQuery.predicateForSamples(withStart: _start, end: _end, options: HKQueryOptions.strictStartDate)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: HKQueryOptions.strictStartDate)
 
-        guard let quantityType: HKSampleType = getType(sampleName: dataType) else {
-            return call.reject("Error in sample name")
-        }
+        let quantityType = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)
         let entryData = HKQuantitySample.init(type: quantityType!,
-        quantity: HKQuantity.init(unit: HKUnit.pound(), doubleValue: bodyMass),
+        quantity: HKQuantity.init(unit: HKUnit.pound(), doubleValue: value),
         start: start,
         end: end)
-        healthKitStore.save(entryData) {
+        healthStore.save(entryData) {
             success, error in
             if(error != nil) {
-                call.reject(error)
+                call.reject("An error occurred")
             }
-            call.resolve(success)
+            call.resolve(["success": success])
         }
     }
 }
