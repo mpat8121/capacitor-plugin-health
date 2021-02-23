@@ -37,7 +37,7 @@ public class HealthPlugin: CAPPlugin {
 
     @objc func isAvailable(_ call: CAPPluginCall) {
         if HKHealthStore.isHealthDataAvailable() {
-            call.resolve()
+            call.resolve(["available": true])
         } else {
             call.reject("Health not available")
         }
@@ -88,8 +88,34 @@ public class HealthPlugin: CAPPlugin {
             guard let samples = results as? [HKQuantitySample] else {
                 return
             }
-
-            call.resolve(["data": samples])
+            var output: [[String: Any]] = []
+            for result in samples {
+                
+                var unitName: String?
+                var unit: HKUnit?
+                if result.quantity.is(compatibleWith: HKUnit.meter()) {
+                    unitName = "metre"
+                    unit = HKUnit.meter()
+                } else if result.quantity.is(compatibleWith: HKUnit.gram()) {
+                    unitName = "gram"
+                    unit = HKUnit.gram()
+                } else if result.quantity.is(compatibleWith: HKUnit.percent()) {
+                    unitName = "percentage"
+                    unit = HKUnit.percent()
+                } else {
+                    print("Error: unit type: ", result.quantity)
+                }
+                let value = result.quantity.doubleValue(for: unit!)
+                output.append(["start": ISO8601DateFormatter().string(from: result.startDate),
+                               "end": ISO8601DateFormatter().string(from: result.endDate),
+                               "units": unitName,
+                               "value": value
+                ])
+            }
+            call.resolve([
+                "resultCount": output.count,
+                "resultData": output
+            ])
         }
 
         healthStore.execute(query)
