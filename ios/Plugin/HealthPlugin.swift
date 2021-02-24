@@ -63,7 +63,7 @@ public class HealthPlugin: CAPPlugin {
             return call.reject("Error in sample name")
         }
 
-        let query = HKSampleQuery(sampleType: sampleType, predicate: nil, limit: limit, sortDescriptors: nil) {
+        let query = HKSampleQuery(sampleType: sampleType, predicate: predicate, limit: limit, sortDescriptors: nil) {
             query, results, error in
             guard let samples = results as? [HKQuantitySample] else {
                 call.reject("Error getting data")
@@ -175,7 +175,7 @@ public class HealthPlugin: CAPPlugin {
                 let value = result.quantity.doubleValue(for: unit!)
                 output.append(["start": ISO8601DateFormatter().string(from: result.startDate),
                                "end": ISO8601DateFormatter().string(from: result.endDate),
-                               "units": unitName,
+                               "units": unitName!,
                                "value": value
                 ])
         }
