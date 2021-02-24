@@ -77,7 +77,7 @@ public class HealthPlugin: CAPPlugin {
     }
 
     @objc func store(_ call: CAPPluginCall) {
-        guard let value = call.options["value"] as? Double else {
+        guard var value = call.options["value"] as? Double else {
             call.reject("Must provide a value")
             return
         }
@@ -94,11 +94,12 @@ public class HealthPlugin: CAPPlugin {
         }
 
         let measurement = implementation.getObjectType(typeName: dataType)
-        let newData = HKQuantitySample.init(
-            type: measurement.type!,
-            quantity: HKQuantity.init(unit: measurement.unit!,
-            doubleValue: value
-            ),
+        let measurementType = measurement.type?.identifier
+        if (measurementType == "HKQuantityTypeIdentifierBodyFatPercentage" && value >= 1) {
+            value = value / 100;
+        }
+        let newData = HKQuantitySample.init(type: measurement.type!,
+                                            quantity: HKQuantity.init(unit: measurement.unit!, doubleValue: value),
         start: start,
         end: end
         )
