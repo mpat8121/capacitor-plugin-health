@@ -93,17 +93,10 @@ public class HealthPlugin: CAPPlugin {
         guard let dataType = call.options["dataType"] as? String else {
             return call.reject("Must provide data type")
         }
-        guard let _limit = call.options["limit"] as? Int else {
-            return call.reject("Must provide limit")
-        }
 
-        let limit: Int = (_limit == 0) ? HKObjectQueryNoLimit : _limit;
-        
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: HKQueryOptions.strictStartDate)
-
-        let (unit, type) = self.getObjectType(typeName: dataType)
-        let newData = HKQuantitySample.init(type: type,
-        quantity: HKQuantity.init(unit: unit, doubleValue: value),
+        let measurement = self.getObjectType(typeName: dataType)
+        let newData = HKQuantitySample.init(type: measurement.type!,
+                                            quantity: HKQuantity.init(unit: measurement.unit!, doubleValue: value),
         start: start,
         end: end
         )
@@ -135,33 +128,31 @@ public class HealthPlugin: CAPPlugin {
         }
     }
 
-    func getObjectType(typeName: String) -> (unit: HKUnit, type: HKQuantityType) {
-        var unit: HKUnit;
-        var type: HKQuantityType;
+    func getObjectType(typeName: String) -> Measurement {
+        var measurement: Measurement = (unit: nil, type: nil)
         switch typeName {
             case "height":
-                unit = HKUnit.meter()
-                type =  HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)!
+                measurement.unit = HKUnit.meter()
+                measurement.type =  HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)!
             case "weight":
-                    unit = HKUnit.gram()
-                    type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)!
+                measurement.unit = HKUnit.gram()
+                measurement.type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)!
             case "leanMass":
-                    unit = HKUnit.gram()
-                    type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)!
+                measurement.unit = HKUnit.gram()
+                measurement.type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)!
             case "bmi":
-                unit = HKUnit.gram()
-                type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!
-                
+                measurement.unit = HKUnit.count()
+                measurement.type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!
             case "bodyFat":
-                 unit = HKUnit.percent()
-                 type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!
+                measurement.unit = HKUnit.percent()
+                measurement.type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!
             case "waist":
-                unit = HKUnit.meter()
-                type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!
+                measurement.unit = HKUnit.meter()
+                measurement.type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)!
         default:
-            return (unit: HKUnit.day(), type: HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.activeEnergyBurned)!);
+            return measurement;
         }
-        return (unit, type)
+        return measurement;
     }
 
     func processResult(results: [HKQuantitySample]) -> [[String: Any]] {
@@ -179,7 +170,7 @@ public class HealthPlugin: CAPPlugin {
                     unitName = "percentage"
                     unit = HKUnit.percent()
                 } else {
-                    print("Error: unit type: ", result.quantity)
+                    print("Error: Unknown unit type: ", result.quantity)
                 }
                 let value = result.quantity.doubleValue(for: unit!)
                 output.append(["start": ISO8601DateFormatter().string(from: result.startDate),
@@ -191,3 +182,5 @@ public class HealthPlugin: CAPPlugin {
         return output
     }
 }
+
+typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
