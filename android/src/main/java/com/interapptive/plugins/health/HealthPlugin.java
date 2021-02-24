@@ -22,7 +22,9 @@ public class HealthPlugin extends Plugin {
 
     @PluginMethod
     public void isAvailable(PluginCall call) {
+        // Validation of call object here
         JSObject ret = new JSObject();
+        ret.put("result", implementation.isAvailable());
         call.resolve(ret);
     }
 }
