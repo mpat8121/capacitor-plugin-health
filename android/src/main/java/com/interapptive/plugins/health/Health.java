@@ -13,25 +13,42 @@ import com.google.android.gms.fitness.Fitness;
 
 public class Health {
 
+    private Context context;
+    private final String tag = "---- IA HEALTH PLUGIN";
+
+    public Health(Context context) {
+        this.context = context;
+    }
+
+    /**
+     * Echo test
+     * @param value
+     * @return
+     */
     public String echo(String value) {
         return value;
     }
 
+    /**
+     * detects if a) Google APIs are available, b) Google Fit is actually installed
+     * @param context
+     * @return
+     */
     public Boolean isAvailable(Context context) {
-        GoogleApiAvailability gapi = GoogleApiAvailability.getInstance();
-        int apiresult = gapi.isGooglePlayServicesAvailable(context);
-        if(apiresult != ConnectionResult.SUCCESS){
-            Log.e("Error", "Google Services not installed or obsolete");
-            return false;
-        } else {
+        GoogleApiAvailability gApi = GoogleApiAvailability.getInstance();
+        int apiResult = gApi.isGooglePlayServicesAvailable(context);
+        if(apiResult != ConnectionResult.SUCCESS) {
             PackageManager pm = context.getPackageManager();
             try {
                 pm.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES);
                 return true;
             } catch (PackageManager .NameNotFoundException e) {
-                Log.e("Exception", "Google Fit not installed");
+                Log.e(tag, "Google Fit not installed");
                 return false;
             }
+        } else {
+            Log.e(tag, "Google Services not installed or obsolete");
+            return false;
         }
     }
 
