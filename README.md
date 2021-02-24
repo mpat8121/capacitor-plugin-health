@@ -15,8 +15,9 @@ npx cap sync
 
 * [`isAvailable()`](#isavailable)
 * [`requestAuth()`](#requestauth)
-* [`query()`](#query)
-* [`store()`](#store)
+* [`query(...)`](#query)
+* [`store(...)`](#store)
+* [Interfaces](#interfaces)
 
 </docgen-index>
 
@@ -26,10 +27,14 @@ npx cap sync
 ### isAvailable()
 
 ```typescript
-isAvailable() => Promise<any>
+isAvailable() => any
 ```
 
-**Returns:** <code>Promise<any></code>
+Checks if HealthKit is available
+
+**Returns:** <code>any</code>
+
+**Since:** 0.0.1
 
 --------------------
 
@@ -37,31 +42,67 @@ isAvailable() => Promise<any>
 ### requestAuth()
 
 ```typescript
-requestAuth() => Promise<any>
+requestAuth() => any
 ```
 
-**Returns:** <code>Promise<any></code>
+Request authorisation from the user to access Health app data
+
+**Returns:** <code>any</code>
+
+**Since:** 0.0.1
 
 --------------------
 
-### query()
+
+### query(...)
 
 ```typescript
-query() => Promise<any>
+query(options: HealthOptions) => any
 ```
 
-**Returns:** <code>Promise<any></code>
+Retrieves data from Health app
+
+| Param         | Type                                                    | Description                                  |
+| ------------- | ------------------------------------------------------- | -------------------------------------------- |
+| **`options`** | <code><a href="#healthoptions">HealthOptions</a></code> | : <a href="#healthoptions">HealthOptions</a> |
+
+**Returns:** <code>any</code>
+
+**Since:** 0.0.1
 
 --------------------
 
-### store()
+
+### store(...)
 
 ```typescript
-store() => Promise<any>
+store(options: HealthOptions) => any
 ```
 
-**Returns:** <code>Promise<any></code>
+Saves data in Health app
+
+| Param         | Type                                                    | Description                                  |
+| ------------- | ------------------------------------------------------- | -------------------------------------------- |
+| **`options`** | <code><a href="#healthoptions">HealthOptions</a></code> | : <a href="#healthoptions">HealthOptions</a> |
+
+**Returns:** <code>any</code>
+
+**Since:** 0.0.1
 
 --------------------
+
+
+### Interfaces
+
+
+#### HealthOptions
+
+| Prop            | Type                |
+| --------------- | ------------------- |
+| **`startDate`** | <code>any</code>    |
+| **`endDate`**   | <code>any</code>    |
+| **`dataType`**  | <code>string</code> |
+| **`limit`**     | <code>number</code> |
+| **`value`**     | <code>any</code>    |
 
 </docgen-api>

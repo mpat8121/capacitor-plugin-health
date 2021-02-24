@@ -1,5 +1,7 @@
 package com.interapptive.plugins.health;
 
+import android.content.Context;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -24,7 +26,8 @@ public class HealthPlugin extends Plugin {
     public void isAvailable(PluginCall call) {
         // Validation of call object here
         JSObject ret = new JSObject();
-        ret.put("result", implementation.isAvailable());
+        Context context = getContext();
+        ret.put("result", implementation.isAvailable(context));
         call.resolve(ret);
     }
 }
