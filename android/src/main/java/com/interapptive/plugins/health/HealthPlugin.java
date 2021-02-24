@@ -11,7 +11,11 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.DataSource;
+import com.google.android.gms.fitness.result.DataReadResponse;
 
+import org.json.JSONException;
+
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -66,7 +70,7 @@ public class HealthPlugin extends Plugin {
     public void isAvailable(PluginCall call) {
         // Validation of call object here
         JSObject ret = new JSObject();
-        final Boolean result = implementation.isAvailable(context);
+        final Boolean result = implementation.isAvailable();
         ret.put("result", result);
         if(result) {
             ret.put("message", "Google fit is available");
@@ -86,11 +90,45 @@ public class HealthPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void query(PluginCall call) {
+    public void query(PluginCall call) throws JSONException, ParseException {
         JSObject ret = new JSObject();
-        ret.put("result", implementation.query());
-        ret.put("message", "Not implemented yet.");
-        call.resolve(ret);
+        JSObject data = call.getData();
+        if(!data.has("startDate")) {
+            ret.put("result", false);
+            ret.put("message", "Missing argument startDate");
+            call.resolve(ret);
+        }
+        if(!data.has("endDate")) {
+            ret.put("result", false);
+            ret.put("message", "Missing argument endDate");
+            call.resolve(ret);
+        }
+        if(!data.has("dataType")) {
+            ret.put("result", false);
+            ret.put("message", "Missing argument dataType");
+            call.resolve(ret);
+        }
+        if(!data.has("limit")) {
+            ret.put("result", false);
+            ret.put("message", "Missing argument limit");
+            call.resolve(ret);
+        }
+        String dataType = call.getData().getString("dataType");
+        DataType dt = datatypes.get(dataType);
+        if(dt == null) {
+            ret.put("result", false);
+            ret.put("message", "DataType " + dataType + " not supported");
+            call.resolve(ret);
+        }
+        try {
+            final DataReadResponse result = implementation.query(data, dt);
+            ret.put("result", result);
+            ret.put("message", "Query data retrieved");
+            call.resolve(ret);
+        } catch (Exception ex) {
+            ret.put("error", ex.getMessage());
+            call.resolve(ret);
+        }
     }
 
     @PluginMethod
@@ -135,14 +173,15 @@ public class HealthPlugin extends Plugin {
             call.resolve(ret);
         }
 
-        // --- UP TO HERE ---
+
         try {
             final Boolean result = implementation.store(data, dt);
             ret.put("result", result);
             ret.put("message", "Not implemented yet.");
             call.resolve(ret);
         } catch (Exception exception) {
-
+            ret.put("error", exception.getMessage());
+            call.resolve(ret);
         }
     }
 }

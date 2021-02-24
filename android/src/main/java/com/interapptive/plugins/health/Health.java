@@ -12,15 +12,23 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.fitness.result.DataReadResponse;
+import com.google.android.gms.fitness.result.DataReadResult;
+import com.google.android.gms.tasks.Task;
 
 import org.json.JSONException;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class Health {
@@ -46,10 +54,9 @@ public class Health {
 
     /**
      * detects if a) Google APIs are available, b) Google Fit is actually installed
-     * @param context
      * @return
      */
-    public Boolean isAvailable(Context context) {
+    public Boolean isAvailable() {
         GoogleApiAvailability gApi = GoogleApiAvailability.getInstance();
         int apiResult = gApi.isGooglePlayServicesAvailable(context);
         if(apiResult != ConnectionResult.SUCCESS) {
@@ -67,18 +74,44 @@ public class Health {
         }
     }
 
-    public Boolean requestAuth() {
+    public Boolean requestAuth()  {
         return false;
     }
 
-    public Boolean query() {
-        return false;
+    public DataReadResponse query(JSObject data, DataType dt) throws JSONException, ParseException {
+        String st = data.getString("startDate");
+        String et = data.getString("endDate");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+        Date startDate = sdf.parse(st);
+        long sDate = startDate.getTime();
+        Date endDate = sdf.parse(et);
+        long eDate = endDate.getTime();
+
+        String sourceBundleId = context.getApplicationContext().getPackageName();
+        if (data.has("sourceBundleId")) {
+            sourceBundleId = data.getString("sourceBundleId");
+        }
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .read(dt)
+                .setTimeRange(sDate, eDate, TimeUnit.MILLISECONDS)
+                .build();
+        Task<DataReadResponse> dataReadResponse = Fitness.getHistoryClient(context, this.account)
+                .readData(readRequest);
+
+        return dataReadResponse.getResult();
     }
 
-    public Boolean store(JSObject data, DataType dt) throws JSONException {
+    public Boolean store(JSObject data, DataType dt) throws JSONException, ParseException {
 
-        long st = data.getLong("startDate");
-        long et = data.getLong("endDate");
+        String st = data.getString("startDate");
+        String et = data.getString("endDate");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+        Date startDate = sdf.parse(st);
+        long sDate = startDate.getTime();
+        Date endDate = sdf.parse(et);
+        long eDate = endDate.getTime();
 
         String sourceBundleId = context.getApplicationContext().getPackageName();
         if (data.has("sourceBundleId")) {
@@ -93,7 +126,7 @@ public class Health {
 
         DataSet.Builder dataSetBuilder = DataSet.builder(dataSrc);
         DataPoint.Builder dataPointBuilder = DataPoint.builder(dataSrc);
-        dataPointBuilder.setTimeInterval(st, et, TimeUnit.MILLISECONDS);
+        dataPointBuilder.setTimeInterval(sDate, eDate, TimeUnit.MILLISECONDS);
 
         if (dt.equals(DataType.TYPE_HEIGHT)) {
             String value = data.getString("value");
@@ -110,15 +143,8 @@ public class Health {
         }
         dataSetBuilder.add(dataPointBuilder.build());
 
-        // --- UP TO HERE ---
-        Fitness.getHistoryClient(context, this.account)
-                .insertData(dataSetBuilder.build())
-                .addOnSuccessListener(r -> {
-                    callbackContext.success();
-                })
-                .addOnFailureListener(err -> {
-                    err.getCause().printStackTrace();
-                    callbackContext.error(err.getMessage());
-                });
+        Task<Void> insertStatus = Fitness.getHistoryClient(context, this.account)
+                .insertData(dataSetBuilder.build());
+        return insertStatus.isSuccessful();
     }
 }
