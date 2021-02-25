@@ -1,19 +1,19 @@
 package com.interapptive.plugins.health;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
 import com.getcapacitor.JSObject;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSource;
@@ -21,26 +21,38 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResponse;
-import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.tasks.Task;
 
 import org.json.JSONException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.Nullable;
+
 public class Health {
 
+    private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     private Context context;
     private final String tag = "---- IA HEALTH PLUGIN";
+
+    private final FitnessOptions fitnessOptions;
 
     // Google account to access the API
     GoogleSignInAccount account;
 
     public Health(Context context) {
         this.context = context;
+        // 1. Create a FitnessOptions instance, declaring the data types and access type
+        // (read and/or write) your app needs:
+        fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_HEIGHT)
+                .addDataType(DataType.TYPE_WEIGHT)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
+                .build();
     }
 
     /**
@@ -74,10 +86,83 @@ public class Health {
         }
     }
 
-    public Boolean requestAuth()  {
-        return false;
+    /**
+     *
+     * @return
+     */
+    public void requestAuth()  {
+        // 2. Get an instance of the Account object to use with the API:
+        GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(context, fitnessOptions);
+
+        // 3. Check if the user has previously granted the necessary data access,
+        // and if not, initiate the authorization flow:
+        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+           GoogleSignIn.requestPermissions(
+                    (Activity) context, // your activity
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
+                    account,
+                    fitnessOptions);
+        } else {
+            accessGoogleFit();
+        }
     }
 
+    /**
+     * 4. If the authorization flow is required, handle the user's response:
+     *      Variation of https://www.tutorialfor.com/questions-317999.htm
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    protected final void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        switch(resultCode) {
+            case Activity.RESULT_OK: // -1
+                if (GOOGLE_FIT_PERMISSIONS_REQUEST_CODE == requestCode) {
+                    this.accessGoogleFit();
+                }
+            default:
+        }
+    }
+
+    /**
+     *   5. After the user has authorized access to the data requested, create a fitness client (for
+     *      example, a HistoryClient to read and/or write historic fitness data) based on your app's
+     *      purpose and needs:
+     */
+    private final void accessGoogleFit() {
+        Calendar cal = Calendar.getInstance ();
+        cal.setTime (new Date ());
+        long endTime = cal.getTimeInMillis ();
+        cal.add (Calendar.YEAR, -1);
+        long startTime = cal.getTimeInMillis ();
+        DataReadRequest readRequest = (new DataReadRequest.Builder())
+                .aggregate(DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .build();
+
+        GoogleSignInAccount account = GoogleSignIn
+                .getAccountForExtension(context, fitnessOptions);
+
+        Fitness.getHistoryClient(context, account)
+                .readData(readRequest)
+                .addOnSuccessListener(response -> {
+                    // Use response data here
+                    Log.d(tag, "OnSuccess()");
+                })
+                .addOnFailureListener(e->{
+                    Log.d(tag, "OnFailure()", e);
+                });
+    }
+
+    /**
+     *
+     * @param data
+     * @param dt
+     * @return
+     * @throws JSONException
+     * @throws ParseException
+     */
     public DataReadResponse query(JSObject data, DataType dt) throws JSONException, ParseException {
         String st = data.getString("startDate");
         String et = data.getString("endDate");
@@ -102,6 +187,14 @@ public class Health {
         return dataReadResponse.getResult();
     }
 
+    /**
+     *
+     * @param data
+     * @param dt
+     * @return
+     * @throws JSONException
+     * @throws ParseException
+     */
     public Boolean store(JSObject data, DataType dt) throws JSONException, ParseException {
 
         String st = data.getString("startDate");
@@ -145,6 +238,7 @@ public class Health {
 
         Task<Void> insertStatus = Fitness.getHistoryClient(context, this.account)
                 .insertData(dataSetBuilder.build());
-        return insertStatus.isSuccessful();
+        return insertStatus.isComplete();
+
     }
 }

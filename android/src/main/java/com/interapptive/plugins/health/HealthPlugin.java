@@ -2,7 +2,6 @@ package com.interapptive.plugins.health;
 
 import android.content.Context;
 
-import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -10,20 +9,13 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import com.google.android.gms.fitness.data.DataType;
-import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.result.DataReadResponse;
 
 import org.json.JSONException;
 
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @CapacitorPlugin(name = "Health")
 public class HealthPlugin extends Plugin {
@@ -70,25 +62,43 @@ public class HealthPlugin extends Plugin {
     public void isAvailable(PluginCall call) {
         // Validation of call object here
         JSObject ret = new JSObject();
-        final Boolean result = implementation.isAvailable();
-        ret.put("result", result);
-        if(result) {
-            ret.put("message", "Google fit is available");
-        } else {
-            ret.put("message", "Google Services not installed or obsolete");
+        try {
+            final Boolean result = implementation.isAvailable();
+            ret.put("result", result);
+            if(result) {
+                ret.put("message", "Google fit is available");
+            } else {
+                ret.put("message", "Google Services not installed or obsolete");
+            }
+            call.resolve(ret);
+        } catch (Exception exception) {
+            call.reject(exception.getMessage(),exception);
         }
-        call.resolve(ret);
     }
 
-    // https://gist.github.com/dariosalvi78/66aa2635abd02f4aa4899628daf74cc7#file-mainactivity-java-L90
+    /**
+     * https://gist.github.com/dariosalvi78/66aa2635abd02f4aa4899628daf74cc7#file-mainactivity-java-L90
+     * @param call
+     */
     @PluginMethod
     public void requestAuth(PluginCall call) {
         JSObject ret = new JSObject();
-        ret.put("result", implementation.requestAuth());
-        ret.put("message", "Not implemented yet.");
-        call.resolve(ret);
+        try {
+            implementation.requestAuth();
+            ret.put("result", true);
+            ret.put("message", "Not implemented yet.");
+            call.resolve(ret);
+        } catch (Exception exception) {
+            call.reject(exception.getMessage(),exception);
+        }
     }
 
+    /**
+     *
+     * @param call
+     * @throws JSONException
+     * @throws ParseException
+     */
     @PluginMethod
     public void query(PluginCall call) throws JSONException, ParseException {
         JSObject ret = new JSObject();
@@ -125,12 +135,15 @@ public class HealthPlugin extends Plugin {
             ret.put("result", result);
             ret.put("message", "Query data retrieved");
             call.resolve(ret);
-        } catch (Exception ex) {
-            ret.put("error", ex.getMessage());
-            call.resolve(ret);
+        } catch (Exception exception) {
+            call.reject(exception.getMessage(),exception);
         }
     }
 
+    /**
+     *
+     * @param call
+     */
     @PluginMethod
     public void store(PluginCall call) {
         JSObject ret = new JSObject();
@@ -179,7 +192,6 @@ public class HealthPlugin extends Plugin {
             ret.put("message", "Not implemented yet.");
             call.resolve(ret);
         } catch (Exception exception) {
-            ret.put("error", exception.getMessage());
             call.reject(exception.getMessage(),exception);
         }
     }
