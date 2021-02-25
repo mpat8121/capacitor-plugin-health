@@ -19,6 +19,14 @@ export class HealthWeb extends WebPlugin implements HealthPlugin {
   async requestAuth(): Promise<boolean> {
     throw this.unavailable('Health API not available in this browser.');
   }
+   /**
+   * Check authorisation from the user to access Health app data
+   * @return Promise<boolean>
+   * @since 0.0.1
+   */
+  async checkAuth(): Promise<boolean> {
+    throw this.unavailable('Health API not available in this browser.');
+  }
   /**
    * Retrieves data from Health app
    * @return Promise<any>
