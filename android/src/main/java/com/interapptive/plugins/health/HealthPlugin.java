@@ -1,14 +1,17 @@
 package com.interapptive.plugins.health;
 
 import android.app.Activity;
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import com.getcapacitor.annotation.Permission;
@@ -16,9 +19,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.result.DataReadResponse;
+import com.google.android.gms.tasks.Task;
 
 import org.json.JSONException;
 
@@ -26,6 +31,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.activity.result.ActivityResult;
 import androidx.annotation.Nullable;
 
 @CapacitorPlugin(name = "Health")
@@ -40,7 +46,7 @@ public class HealthPlugin extends Plugin {
                 .build();
     // Declare data types compatible with plugin
     public static Map<String, DataType> datatypes = new HashMap<String, DataType>();
-
+    private final String tag = "---- IA HEALTH PLUGIN";
     static {
         datatypes.put("height", DataType.TYPE_HEIGHT);
         datatypes.put("weight", DataType.TYPE_WEIGHT);
@@ -98,16 +104,27 @@ public class HealthPlugin extends Plugin {
      */
     @PluginMethod
     public void requestAuth(PluginCall call) {
-        GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(context, fitnessOptions);
-        if (account == null) {
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestEmail()
-                    .build();
-            GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
-            Intent intent = signInClient.getSignInIntent();
-            startActivityForResult(call, intent, "implementation.requestAuth");
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
+        Intent intent = signInClient.getSignInIntent();
+        startActivityForResult(call, intent, "reqAuth");
+    }
+
+    @ActivityCallback
+    private void reqAuth(PluginCall call, ActivityResult result) {
+        if(result.getResultCode() == Activity.RESULT_CANCELED) {
+            call.reject("Login cancelled");
         } else {
-            implementation.requestAuth(getActivity());
+            Intent data = result.getData();
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                implementation.accessGoogleFit();
+            } catch (ApiException e) {
+                Log.w(tag, "signInResult:failed code=" + e.getStatusCode());
+            }
         }
     }
 

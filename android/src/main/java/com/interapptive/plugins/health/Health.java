@@ -98,6 +98,7 @@ public class Health {
                 GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
                 account,
                 this.fitnessOptions);
+        this.accessGoogleFit();
     }
 
     /**
@@ -105,7 +106,7 @@ public class Health {
      *      example, a HistoryClient to read and/or write historic fitness data) based on your app's
      *      purpose and needs:
      */
-    public final void accessGoogleFit(Activity activity) {
+    public final void accessGoogleFit() {
 
         Calendar cal = Calendar.getInstance ();
         cal.setTime (new Date ());
