@@ -32,6 +32,8 @@ export interface HealthOptions {
   startDate: Date;
   endDate: Date;
   dataType: string;
-  limit: number;
+  limit?: number;
   value?: any;
+  sourceBundleId?: string;
+  sourceName?: string;
 }

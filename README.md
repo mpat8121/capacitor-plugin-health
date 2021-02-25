@@ -101,12 +101,14 @@ Saves data in Health app
 
 #### HealthOptions
 
-| Prop            | Type                |
-| --------------- | ------------------- |
-| **`startDate`** | <code>any</code>    |
-| **`endDate`**   | <code>any</code>    |
-| **`dataType`**  | <code>string</code> |
-| **`limit`**     | <code>number</code> |
-| **`value`**     | <code>any</code>    |
+| Prop                 | Type                |
+| -------------------- | ------------------- |
+| **`startDate`**      | <code>any</code>    |
+| **`endDate`**        | <code>any</code>    |
+| **`dataType`**       | <code>string</code> |
+| **`limit`**          | <code>number</code> |
+| **`value`**          | <code>any</code>    |
+| **`sourceBundleId`** | <code>string</code> |
+| **`sourceName`**     | <code>string</code> |
 
 </docgen-api>
