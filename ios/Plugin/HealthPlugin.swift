@@ -3,14 +3,14 @@ import Capacitor
 import HealthKit
 
 var healthStore: HKHealthStore = HKHealthStore();
-let allTypes = Set([
-            HKObjectType.quantityType(forIdentifier: .height)!,
-            HKObjectType.quantityType(forIdentifier: .bodyMass)!,
-            HKObjectType.quantityType(forIdentifier: .bodyMassIndex)!,
-            HKObjectType.quantityType(forIdentifier: .leanBodyMass)!,
-            HKObjectType.quantityType(forIdentifier: .bodyFatPercentage)!,
-            HKObjectType.quantityType(forIdentifier: .waistCircumference)!
-            ])
+// let allTypes = Set([
+//             HKObjectType.quantityType(forIdentifier: .height)!,
+//             HKObjectType.quantityType(forIdentifier: .bodyMass)!,
+//             HKObjectType.quantityType(forIdentifier: .bodyMassIndex)!,
+//             HKObjectType.quantityType(forIdentifier: .leanBodyMass)!,
+//             HKObjectType.quantityType(forIdentifier: .bodyFatPercentage)!,
+//             HKObjectType.quantityType(forIdentifier: .waistCircumference)!
+//             ])
 
 @objc(HealthPlugin)
 public class HealthPlugin: CAPPlugin {
@@ -26,6 +26,10 @@ public class HealthPlugin: CAPPlugin {
 
     @objc func requestAuth(_ call: CAPPluginCall) {
         if(HKHealthStore.isHealthDataAvailable()) {
+            guard let types = call.getArray() as [String] else {
+                return call.reject("Must provide data types to request")
+            }
+            let allTypes = implementation.getTypes(types: types)
             healthStore.requestAuthorization(toShare: allTypes, read: allTypes) { (success, error) in 
                 if !success {
                     call.reject("Unable to authorize")
