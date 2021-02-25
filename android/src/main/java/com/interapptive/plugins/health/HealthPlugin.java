@@ -121,7 +121,7 @@ public class HealthPlugin extends Plugin {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 implementation.accessGoogleFit();
             } catch (ApiException e) {
-                Log.w(tag, "signInResult:failed code=" + e.getStatusCode());
+                Log.w(tag, "signInResult:failed code=" + e.getLocalizedMessage());
             }
         } else if(result.getResultCode() == Activity.RESULT_CANCELED) {
             call.reject("User cancelled login flow");
