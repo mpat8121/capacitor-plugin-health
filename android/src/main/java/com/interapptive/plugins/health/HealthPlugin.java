@@ -109,14 +109,12 @@ public class HealthPlugin extends Plugin {
                 .build();
         GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
         Intent intent = signInClient.getSignInIntent();
-        startActivityForResult(call, intent, "reqAuth");
+        startActivityForResult(call, intent, "reqAuthCallBack");
     }
 
     @ActivityCallback
-    private void reqAuth(PluginCall call, ActivityResult result) {
-        if(result.getResultCode() == Activity.RESULT_CANCELED) {
-            call.reject("Login cancelled");
-        } else {
+    private void reqAuthCallBack(PluginCall call, ActivityResult result) {
+        if(result.getResultCode() == Activity.RESULT_OK) {
             Intent data = result.getData();
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
@@ -125,6 +123,10 @@ public class HealthPlugin extends Plugin {
             } catch (ApiException e) {
                 Log.w(tag, "signInResult:failed code=" + e.getStatusCode());
             }
+        } else if(result.getResultCode() == Activity.RESULT_CANCELED) {
+            call.reject("User cancelled login flow");
+        } else {
+            call.reject("Unknown error - unable to utilise login");
         }
     }
 
