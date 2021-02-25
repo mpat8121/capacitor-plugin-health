@@ -25,10 +25,12 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.result.DataReadResponse;
 import com.google.android.gms.tasks.Task;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import androidx.activity.result.ActivityResult;
@@ -119,14 +121,33 @@ public class HealthPlugin extends Plugin {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
-                implementation.accessGoogleFit();
+                implementation.accessGoogleFit(null);
             } catch (ApiException e) {
                 Log.w(tag, "signInResult:failed code=" + e.getStatusCode());
             }
         } else if(result.getResultCode() == Activity.RESULT_CANCELED) {
-            call.reject("User cancelled login flow");
+            call.reject("User cancelled the dialog");
         } else {
-            call.reject("Unknown error - unable to utilise login");
+            call.reject("Authorisation failed, result code " + result.getResultCode());
+        }
+    }
+
+    /**
+     *
+     * @param call
+     */
+    @PluginMethod
+    public void checkAuth(PluginCall call) {
+        try {
+            // Cordova version does:
+            // 1. check if the app is authorised to use Google fitness APIs
+            // 2. build the read and read-write sets
+            // 3. calls  requestDynamicPermissions(); NOT REQ'd
+            // 4. calls accessGoogleFit();
+            implementation.accessGoogleFit(call);
+
+        } catch (Exception exception) {
+            call.reject(exception.getMessage(),exception);
         }
     }
 

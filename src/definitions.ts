@@ -6,6 +6,12 @@ export interface HealthPlugin {
    */
   isAvailable(): Promise<boolean>;
   /**
+   * Check authorisation from the user to access Health app data
+   * @return Promise<boolean>
+   * @since 0.0.1
+   */
+  checkAuth(): Promise<any>;
+  /**
    * Request authorisation from the user to access Health app data
    * @return Promise<boolean>
    * @since 0.0.1

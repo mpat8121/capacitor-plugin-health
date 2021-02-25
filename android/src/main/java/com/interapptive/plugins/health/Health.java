@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.getcapacitor.JSObject;
 
+import com.getcapacitor.PluginCall;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -98,7 +99,7 @@ public class Health {
                 GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
                 account,
                 this.fitnessOptions);
-        this.accessGoogleFit();
+        this.accessGoogleFit(null);
     }
 
     /**
@@ -106,7 +107,7 @@ public class Health {
      *      example, a HistoryClient to read and/or write historic fitness data) based on your app's
      *      purpose and needs:
      */
-    public final void accessGoogleFit() {
+    public final void accessGoogleFit(@Nullable PluginCall call) {
 
         Calendar cal = Calendar.getInstance ();
         cal.setTime (new Date ());
@@ -127,9 +128,19 @@ public class Health {
                 .addOnSuccessListener(response -> {
                     // Use response data here
                     Log.d(tag, "OnSuccess()");
+
+                    if(!call.getCallbackId().isEmpty()) {
+                        JSObject ret = new JSObject();
+                        ret.put("result", true);
+                        ret.put("message", "OnSuccess()");
+                        call.resolve(ret);
+                    }
                 })
                 .addOnFailureListener(e->{
                     Log.d(tag, "OnFailure()", e);
+                        if(!call.getCallbackId().isEmpty()) {
+                            call.reject(e.getMessage());
+                        }
                 });
     }
 
