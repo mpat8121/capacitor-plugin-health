@@ -26,7 +26,7 @@ public class HealthPlugin: CAPPlugin {
 
     @objc func requestAuth(_ call: CAPPluginCall) {
         if(HKHealthStore.isHealthDataAvailable()) {
-            guard let types = call.getArray() as [String] else {
+            guard let types = call.getArray("types", String.self)! as [String]? else {
                 return call.reject("Must provide data types to request")
             }
             let allTypes = implementation.getTypes(types: types)

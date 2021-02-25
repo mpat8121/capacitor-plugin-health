@@ -88,21 +88,21 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
     }
 
     @objc public func getTypes(types: [String]) -> Set<HKSampleType> {
-        var retTypes: Set<HkSampleType> = [];
+        var retTypes: Set<HKSampleType> = [];
         for type in types {
             switch type {
             case "height":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height))
+                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)!)
             case "weight":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass))
+                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)!)
             case "leanMass":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass))
+                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)!)
             case "bmi":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex))
+                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!)
             case "bodyFat":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage))
+                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!)
             case "waist":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference))
+                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)!)
             default:
                 print("no match in case")
             }
