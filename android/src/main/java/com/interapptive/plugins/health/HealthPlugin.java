@@ -1,13 +1,22 @@
 package com.interapptive.plugins.health;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 
+import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import com.getcapacitor.annotation.Permission;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.result.DataReadResponse;
 
@@ -17,12 +26,18 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.annotation.Nullable;
+
 @CapacitorPlugin(name = "Health")
 public class HealthPlugin extends Plugin {
-
+    private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     private Context context;
     private Health implementation;
-
+    private FitnessOptions fitnessOptions = FitnessOptions.builder()
+            .addDataType(DataType.TYPE_HEIGHT)
+                .addDataType(DataType.TYPE_WEIGHT)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
+                .build();
     // Declare data types compatible with plugin
     public static Map<String, DataType> datatypes = new HashMap<String, DataType>();
 
@@ -37,6 +52,7 @@ public class HealthPlugin extends Plugin {
      * Load the context
      */
     public void load() {
+        super.load();
         context = getContext();
         implementation = new Health(context);
     }
@@ -82,14 +98,16 @@ public class HealthPlugin extends Plugin {
      */
     @PluginMethod
     public void requestAuth(PluginCall call) {
-        JSObject ret = new JSObject();
-        try {
-            implementation.requestAuth();
-            ret.put("result", true);
-            ret.put("message", "Not implemented yet.");
-            call.resolve(ret);
-        } catch (Exception exception) {
-            call.reject(exception.getMessage(),exception);
+        GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(context, fitnessOptions);
+        if (account == null) {
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .build();
+            GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
+            Intent intent = signInClient.getSignInIntent();
+            startActivityForResult(call, intent, "implementation.requestAuth");
+        } else {
+            implementation.requestAuth(getActivity());
         }
     }
 

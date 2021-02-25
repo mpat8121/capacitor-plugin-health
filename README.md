@@ -14,7 +14,7 @@ npx cap sync
 <docgen-index>
 
 * [`isAvailable()`](#isavailable)
-* [`requestAuth()`](#requestauth)
+* [`requestAuth(...)`](#requestauth)
 * [`query(...)`](#query)
 * [`store(...)`](#store)
 * [Interfaces](#interfaces)
@@ -39,13 +39,17 @@ Checks if HealthKit is available
 --------------------
 
 
-### requestAuth()
+### requestAuth(...)
 
 ```typescript
-requestAuth() => any
+requestAuth(options: {}) => any
 ```
 
 Request authorisation from the user to access Health app data
+
+| Param         | Type            |
+| ------------- | --------------- |
+| **`options`** | <code>{}</code> |
 
 **Returns:** <code>any</code>
 

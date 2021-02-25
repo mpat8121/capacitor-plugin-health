@@ -10,6 +10,8 @@ import com.getcapacitor.JSObject;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.fitness.Fitness;
@@ -90,38 +92,12 @@ public class Health {
      *
      * @return
      */
-    public void requestAuth()  {
-        // 2. Get an instance of the Account object to use with the API:
-        GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(context, fitnessOptions);
-
-        // 3. Check if the user has previously granted the necessary data access,
-        // and if not, initiate the authorization flow:
-        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-           GoogleSignIn.requestPermissions(
-                    (Activity) context, // your activity
-                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
-                    account,
-                    fitnessOptions);
-        } else {
-            accessGoogleFit();
-        }
-    }
-
-    /**
-     * 4. If the authorization flow is required, handle the user's response:
-     *      Variation of https://www.tutorialfor.com/questions-317999.htm
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
-    protected final void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        switch(resultCode) {
-            case Activity.RESULT_OK: // -1
-                if (GOOGLE_FIT_PERMISSIONS_REQUEST_CODE == requestCode) {
-                    this.accessGoogleFit();
-                }
-            default:
-        }
+    public void requestAuth(Activity activity)  {
+        GoogleSignIn.requestPermissions(
+                activity, // your activity
+                GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
+                account,
+                this.fitnessOptions);
     }
 
     /**
@@ -129,7 +105,8 @@ public class Health {
      *      example, a HistoryClient to read and/or write historic fitness data) based on your app's
      *      purpose and needs:
      */
-    private final void accessGoogleFit() {
+    public final void accessGoogleFit(Activity activity) {
+
         Calendar cal = Calendar.getInstance ();
         cal.setTime (new Date ());
         long endTime = cal.getTimeInMillis ();
@@ -177,6 +154,7 @@ public class Health {
         if (data.has("sourceBundleId")) {
             sourceBundleId = data.getString("sourceBundleId");
         }
+        this.account = GoogleSignIn.getLastSignedInAccount(context);
         DataReadRequest readRequest = new DataReadRequest.Builder()
                 .read(dt)
                 .setTimeRange(sDate, eDate, TimeUnit.MILLISECONDS)

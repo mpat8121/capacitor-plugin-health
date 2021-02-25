@@ -10,7 +10,7 @@ export interface HealthPlugin {
    * @return Promise<boolean>
    * @since 0.0.1
    */
-  requestAuth(): Promise<boolean>;
+  requestAuth(options: {}): Promise<boolean>;
   /**
    * Retrieves data from Health app
    * @param options: HealthOptions
