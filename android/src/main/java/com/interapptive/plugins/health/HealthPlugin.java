@@ -173,7 +173,6 @@ public class HealthPlugin extends Plugin {
             call.resolve(ret);
         }
 
-
         try {
             final Boolean result = implementation.store(data, dt);
             ret.put("result", result);
@@ -181,7 +180,7 @@ public class HealthPlugin extends Plugin {
             call.resolve(ret);
         } catch (Exception exception) {
             ret.put("error", exception.getMessage());
-            call.resolve(ret);
+            call.reject(exception.getMessage(),exception);
         }
     }
 }
