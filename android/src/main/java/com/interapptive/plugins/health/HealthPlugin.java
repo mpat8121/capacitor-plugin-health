@@ -35,11 +35,8 @@ public class HealthPlugin extends Plugin {
     private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     private Context context;
     private Health implementation;
-    private FitnessOptions fitnessOptions = FitnessOptions.builder()
-            .addDataType(DataType.TYPE_HEIGHT)
-                .addDataType(DataType.TYPE_WEIGHT)
-                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
-                .build();
+    FitnessOptions fitnessOptions;
+
     // Declare data types compatible with plugin
     public static Map<String, DataType> datatypes = new HashMap<String, DataType>();
     private final String tag = "---- IA HEALTH PLUGIN";
@@ -56,25 +53,20 @@ public class HealthPlugin extends Plugin {
     public void load() {
         super.load();
         context = getContext();
-        implementation = new Health(context);
-    }
+        // 1. Create a FitnessOptions instance, declaring the data types and access type
+        // Build this somewhere on this page on request load
+        fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_HEIGHT)
+                .addDataType(DataType.TYPE_WEIGHT)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
+                .build();
 
-    /**
-     * Echo Method
-     * test the plugin
-     * @param call
-     */
-    @PluginMethod
-    public void echo(PluginCall call) {
-        String value = call.getString("value");
-        JSObject ret = new JSObject();
-        ret.put("value", implementation.echo(value));
-        call.resolve(ret);
+        implementation = new Health(context, fitnessOptions);
     }
 
     /**
      * detects if a) Google APIs are available, b) Google Fit is actually installed
-     * @param call
+     * @param call Capacitor Plugin Call
      */
     @PluginMethod
     public void isAvailable(PluginCall call) {
@@ -96,14 +88,15 @@ public class HealthPlugin extends Plugin {
 
     /**
      * https://gist.github.com/dariosalvi78/66aa2635abd02f4aa4899628daf74cc7#file-mainactivity-java-L90
-     * @param call
+     * @param call Capacitor Plugin Call
      */
     @PluginMethod
     public void requestAuth(PluginCall call) {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
+//        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+//                .requestEmail()
+//                .build();
+//        GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
+        GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), GoogleSignInOptions.DEFAULT_SIGN_IN);
         Intent intent = signInClient.getSignInIntent();
         startActivityForResult(call, intent, "reqAuthCallBack");
     }
@@ -115,7 +108,7 @@ public class HealthPlugin extends Plugin {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
-                implementation.accessGoogleFit(null);
+                implementation.accessGoogleFit(call);
             } catch (ApiException e) {
                 Log.w(tag, "signInResult:failed code=" + e.getLocalizedMessage());
             }

@@ -94,16 +94,41 @@ export interface HealthData {
    */
   sourceBundleId: string;
 }
+/**
+ * @hidden
+ */
+export interface HealthRequestTypes {
+  types: AndroidHealthDataType[] | AppleHealthDataType[];
+}
+/**
+ * @hidden
+ */
+export enum AndroidHealthDataType {
+  HEIGHT = 'height',
+  WEIGHT = 'weight',
+  FAT_PERCENTAGE = 'fat_percentage'
+}
+/**
+ * @hidden
+ */
+export enum AppleHealthDataType {
+  HEIGHT = 'height',
+  WEIGHT = 'weight',
+  FAT_PERCENTAGE = 'fat_percentage',
+  BMI = 'bmi',
+  WAIST = 'waist'
+}
 
 /**
  * @name Health
  * @description
- * A Capacitor 3  plugin that abstracts fitness and health repositories like Apple HealthKit or Google Fit.
+ * A Capacitor 3 plugin that abstracts fitness and health repositories like Apple HealthKit or Google Fit.
  * 
  * @interfaces
  * HealthQueryOptions
  * HealthStoreOptions
  * HealthData
+ * HealthRequestTypes
  */
 export interface HealthPlugin {
   /**
@@ -123,7 +148,7 @@ export interface HealthPlugin {
    * @return Promise<boolean>
    * @since 0.0.1
    */
-  requestAuth(options: {}): Promise<boolean>;
+  requestAuth(options: HealthRequestTypes): Promise<boolean>;
   /**
    * Retrieves data from Health app
    * @param options: HealthOptions

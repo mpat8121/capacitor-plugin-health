@@ -10,6 +10,8 @@ import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.fitness.Fitness;
@@ -36,42 +38,28 @@ import androidx.annotation.Nullable;
 public class Health {
 
     private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
-    private Context context;
+    private final Context context;
+    private final FitnessOptions fitnessOptions;
     private final String tag = "---- IA HEALTH PLUGIN";
 
-    private final FitnessOptions fitnessOptions;
-
     // Google account to access the API
-    GoogleSignInAccount account;
+//    GoogleSignInAccount account;
 
-    public Health(Context context) {
+    public Health(Context context, FitnessOptions fitnessOptions) {
         this.context = context;
-        // 1. Create a FitnessOptions instance, declaring the data types and access type
-        // (read and/or write) your app needs:
-        fitnessOptions = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_HEIGHT)
-                .addDataType(DataType.TYPE_WEIGHT)
-                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
-                .build();
+        this.fitnessOptions = fitnessOptions;
     }
 
     /**
-     * Echo test
-     * @param value
-     * @return
-     */
-    public String echo(String value) {
-        return value;
-    }
-
-    /**
-     * detects if a) Google APIs are available, b) Google Fit is actually installed
-     * @return
+     * Detects if:
+     * a) Google Play Services APIs are available,
+     * b) Google Fit is installed
+     * @return true if Google Fit is installed
      */
     public Boolean isAvailable() {
         GoogleApiAvailability gApi = GoogleApiAvailability.getInstance();
         int apiResult = gApi.isGooglePlayServicesAvailable(context);
-        if(apiResult != ConnectionResult.SUCCESS) {
+        if(apiResult == ConnectionResult.SUCCESS) {
             PackageManager pm = context.getPackageManager();
             try {
                 pm.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES);
@@ -81,22 +69,13 @@ public class Health {
                 return false;
             }
         } else {
-            Log.e(tag, "Google Services not installed or obsolete");
+            String errorCode = "";
+            if(gApi.isUserResolvableError(apiResult)) {
+                errorCode = gApi.getErrorString(apiResult);
+            }
+            Log.e(tag, "Google Services not installed or obsolete, code: " + errorCode);
             return false;
         }
-    }
-
-    /**
-     *
-     * @return
-     */
-    public void requestAuth(Activity activity)  {
-        GoogleSignIn.requestPermissions(
-                activity, // your activity
-                GOOGLE_FIT_PERMISSIONS_REQUEST_CODE, // e.g. 1
-                account,
-                this.fitnessOptions);
-        this.accessGoogleFit(null);
     }
 
     /**
@@ -104,7 +83,7 @@ public class Health {
      *      example, a HistoryClient to read and/or write historic fitness data) based on your app's
      *      purpose and needs:
      */
-    public final void accessGoogleFit(@Nullable PluginCall call) {
+    public final void accessGoogleFit(PluginCall call) {
 
         Calendar cal = Calendar.getInstance ();
         cal.setTime (new Date ());
@@ -117,8 +96,7 @@ public class Health {
                 .bucketByTime(1, TimeUnit.DAYS)
                 .build();
 
-        GoogleSignInAccount account = GoogleSignIn
-                .getAccountForExtension(context, fitnessOptions);
+        final GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(context, fitnessOptions);
 
         Fitness.getHistoryClient(context, account)
                 .readData(readRequest)
@@ -135,9 +113,12 @@ public class Health {
                 })
                 .addOnFailureListener(e->{
                     Log.d(tag, "OnFailure()", e);
-                        if(!call.getCallbackId().isEmpty()) {
-                            call.reject(e.getMessage());
-                        }
+                    if(!call.getCallbackId().isEmpty()) {
+                        JSObject ret = new JSObject();
+                        ret.put("result", false);
+                        ret.put("message", e.getMessage());
+                        call.resolve(ret);
+                    }
                 });
     }
 
@@ -163,12 +144,12 @@ public class Health {
         if (data.has("sourceBundleId")) {
             sourceBundleId = data.getString("sourceBundleId");
         }
-        this.account = GoogleSignIn.getLastSignedInAccount(context);
+        final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(context);
         DataReadRequest readRequest = new DataReadRequest.Builder()
                 .read(dt)
                 .setTimeRange(sDate, eDate, TimeUnit.MILLISECONDS)
                 .build();
-        Task<DataReadResponse> dataReadResponse = Fitness.getHistoryClient(context, this.account)
+        Task<DataReadResponse> dataReadResponse = Fitness.getHistoryClient(context, account)
                 .readData(readRequest);
 
         return dataReadResponse.getResult();
@@ -223,7 +204,9 @@ public class Health {
         }
         dataSetBuilder.add(dataPointBuilder.build());
 
-        Task<Void> insertStatus = Fitness.getHistoryClient(context, this.account)
+        final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(context);
+
+        Task<Void> insertStatus = Fitness.getHistoryClient(context, account)
                 .insertData(dataSetBuilder.build());
         return insertStatus.isComplete();
 
