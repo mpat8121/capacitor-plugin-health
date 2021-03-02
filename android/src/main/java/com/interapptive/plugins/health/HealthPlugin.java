@@ -92,13 +92,22 @@ public class HealthPlugin extends Plugin {
      */
     @PluginMethod
     public void requestAuth(PluginCall call) {
-//        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//                .requestEmail()
-//                .build();
-//        GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
-        GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), GoogleSignInOptions.DEFAULT_SIGN_IN);
-        Intent intent = signInClient.getSignInIntent();
-        startActivityForResult(call, intent, "reqAuthCallBack");
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(
+                context,
+                fitnessOptions
+        );
+        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+            GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
+            Intent intent = signInClient.getSignInIntent();
+            startActivityForResult(call, intent, "reqAuthCallBack");
+        } else {
+            implementation.accessGoogleFit(call);
+        }
+
     }
 
     @ActivityCallback
@@ -108,7 +117,15 @@ public class HealthPlugin extends Plugin {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
-                implementation.accessGoogleFit(call);
+                if(!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+                    GoogleSignIn.requestPermissions(getActivity(),
+                            GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                            account,
+                            fitnessOptions
+                    );
+                } else {
+                    implementation.accessGoogleFit(call);
+                }
             } catch (ApiException e) {
                 Log.w(tag, "signInResult:failed code=" + e.getLocalizedMessage());
             }
