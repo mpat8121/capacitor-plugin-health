@@ -35,6 +35,7 @@ public class HealthPlugin extends Plugin {
     private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     private Context context;
     private Health implementation;
+    PluginCall call; // for passing between reqAuth() and processResponse()
     FitnessOptions fitnessOptions;
 
     // Declare data types compatible with plugin
@@ -92,47 +93,30 @@ public class HealthPlugin extends Plugin {
      */
     @PluginMethod
     public void requestAuth(PluginCall call) {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-
         GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(
                 context,
-                fitnessOptions
-        );
+                fitnessOptions);
         if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-            GoogleSignInClient signInClient = GoogleSignIn.getClient(this.getActivity(), gso);
-            Intent intent = signInClient.getSignInIntent();
-            startActivityForResult(call, intent, "reqAuthCallBack");
+            this.call = call;
+            GoogleSignIn.requestPermissions(
+                    getActivity(),
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                    account,
+                    fitnessOptions);
+            // Returns to MainActivity onActivityResult()
         } else {
             implementation.accessGoogleFit(call);
         }
-
     }
 
-    @ActivityCallback
-    private void reqAuthCallBack(PluginCall call, ActivityResult result) {
-        if(result.getResultCode() == Activity.RESULT_OK) {
-            Intent data = result.getData();
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                if(!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-                    GoogleSignIn.requestPermissions(getActivity(),
-                            GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-                            account,
-                            fitnessOptions
-                    );
-                } else {
-                    implementation.accessGoogleFit(call);
-                }
-            } catch (ApiException e) {
-                Log.w(tag, "signInResult:failed code=" + e.getLocalizedMessage());
-            }
-        } else if(result.getResultCode() == Activity.RESULT_CANCELED) {
-            call.reject("User cancelled the dialog");
+    public static void processActivityResult(int requestCode) {
+        if(requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
+//            implementation.accessGoogleFit(this.call);
         } else {
-            call.reject("Authorisation failed, result code " + result.getResultCode());
+//            JSObject ret = new JSObject();
+//            ret.put("result", false);
+//            ret.put("message", "Missing argument dataType");
+//            this.call.resolve(ret);
         }
     }
 
