@@ -50,6 +50,7 @@ public class Health {
         this.fitnessOptions = fitnessOptions;
     }
 
+
     /**
      * Detects if:
      * a) Google Play Services APIs are available,

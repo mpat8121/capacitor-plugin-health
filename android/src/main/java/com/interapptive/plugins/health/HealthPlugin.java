@@ -98,6 +98,8 @@ public class HealthPlugin extends Plugin {
                 fitnessOptions);
         if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
             this.call = call;
+            Util.setCall(call);
+            Util.setContext(context);
             GoogleSignIn.requestPermissions(
                     getActivity(),
                     GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
@@ -109,14 +111,22 @@ public class HealthPlugin extends Plugin {
         }
     }
 
-    public static void processActivityResult(int requestCode) {
+    public void processActivityResult(int requestCode) {
+        PluginCall savedCall = Util.getCall();
+        Context savedContext = Util.getContext();
+        FitnessOptions opts = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_HEIGHT)
+                .addDataType(DataType.TYPE_WEIGHT)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
+                .build();
+        Health newHealth = new Health(savedContext, opts);
         if(requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
-//            implementation.accessGoogleFit(this.call);
+            newHealth.accessGoogleFit(savedCall);
         } else {
-//            JSObject ret = new JSObject();
-//            ret.put("result", false);
-//            ret.put("message", "Missing argument dataType");
-//            this.call.resolve(ret);
+            JSObject ret = new JSObject();
+            ret.put("result", false);
+            ret.put("message", "Missing argument dataType");
+            this.call.resolve(ret);
         }
     }
 
