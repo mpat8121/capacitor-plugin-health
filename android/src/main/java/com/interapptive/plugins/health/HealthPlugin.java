@@ -57,9 +57,9 @@ public class HealthPlugin extends Plugin {
         // 1. Create a FitnessOptions instance, declaring the data types and access type
         // Build this somewhere on this page on request load
         fitnessOptions = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_HEIGHT)
-                .addDataType(DataType.TYPE_WEIGHT)
-                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
+                .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_WRITE)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_WRITE)
                 .build();
 
         implementation = new Health(context, fitnessOptions);
@@ -96,6 +96,7 @@ public class HealthPlugin extends Plugin {
         GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(
                 context,
                 fitnessOptions);
+
         if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
             this.call = call;
             Util.setCall(call);

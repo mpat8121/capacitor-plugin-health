@@ -92,7 +92,7 @@ public class Health {
         cal.add (Calendar.YEAR, -1);
         long startTime = cal.getTimeInMillis ();
         DataReadRequest readRequest = (new DataReadRequest.Builder())
-                .aggregate(DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(DataType.TYPE_WEIGHT)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .build();
