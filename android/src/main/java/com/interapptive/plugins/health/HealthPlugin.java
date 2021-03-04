@@ -58,8 +58,10 @@ public class HealthPlugin extends Plugin {
         // Build this somewhere on this page on request load
         fitnessOptions = FitnessOptions.builder()
                 .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_READ)
                 .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_WRITE)
                 .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_WRITE)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_READ)
                 .build();
 
         implementation = new Health(context, fitnessOptions);
@@ -116,9 +118,11 @@ public class HealthPlugin extends Plugin {
         PluginCall savedCall = Util.getCall();
         Context savedContext = Util.getContext();
         FitnessOptions opts = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_HEIGHT)
-                .addDataType(DataType.TYPE_WEIGHT)
-                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE)
+                .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_WRITE)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_WRITE)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_READ)
                 .build();
         Health newHealth = new Health(savedContext, opts);
         if(requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
