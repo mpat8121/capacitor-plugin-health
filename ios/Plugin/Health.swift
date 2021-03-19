@@ -21,7 +21,7 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)
             case "bmi":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)
-            case "bodyFat":
+            case "fat_percentage":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)
             case "waist":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)
@@ -57,8 +57,8 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
         return measurement;
     }
     
-    @objc public func processResult(results: [HKQuantitySample]) -> [[String: Any]] {
-        var output: [[String: Any]] = []
+    @objc public func processResult(typeName: String, results: [HKQuantitySample]) -> [String: [String: Any]] {
+        var output: [String: [String: Any]] = [:]
         for result in results {
             var unitName: String?
                 var unit: HKUnit?
@@ -78,35 +78,23 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
                     print("Error: Unknown unit type: ", result.quantity)
                 }
                 let value = result.quantity.doubleValue(for: unit!)
-                output.append(["start": ISO8601DateFormatter().string(from: result.startDate),
+            output[typeName] = ["start": ISO8601DateFormatter().string(from: result.startDate),
                                "end": ISO8601DateFormatter().string(from: result.endDate),
                                "units": unitName!,
                                "value": value
-                ])
+                ]
         }
         return output
     }
 
-    @objc public func getTypes(types: [String]) -> Set<HKSampleType> {
+    @objc public func getTypes() -> Set<HKSampleType> {
         var retTypes: Set<HKSampleType> = [];
-        for type in types {
-            switch type {
-            case "height":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)!)
-            case "weight":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)!)
-            case "leanMass":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)!)
-            case "bmi":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!)
-            case "bodyFat":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!)
-            case "waist":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)!)
-            default:
-                print("no match in case")
-            }
-        }
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)!)
         return retTypes
     }
 }
