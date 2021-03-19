@@ -14,7 +14,8 @@ npx cap sync
 <docgen-index>
 
 * [`isAvailable()`](#isavailable)
-* [`requestAuth(...)`](#requestauth)
+* [`checkAuth()`](#checkauth)
+* [`requestAuth()`](#requestauth)
 * [`query(...)`](#query)
 * [`store(...)`](#store)
 * [Interfaces](#interfaces)
@@ -39,17 +40,28 @@ Checks if HealthKit is available
 --------------------
 
 
-### requestAuth(...)
+### checkAuth()
 
 ```typescript
-requestAuth(options: {}) => any
+checkAuth() => any
+```
+
+Check authorisation from the user to access Health app data
+
+**Returns:** <code>any</code>
+
+**Since:** 0.0.1
+
+--------------------
+
+
+### requestAuth()
+
+```typescript
+requestAuth() => any
 ```
 
 Request authorisation from the user to access Health app data
-
-| Param         | Type            |
-| ------------- | --------------- |
-| **`options`** | <code>{}</code> |
 
 **Returns:** <code>any</code>
 
@@ -123,13 +135,13 @@ Saves data in Health app
 
 #### HealthStoreOptions
 
-| Prop                 | Type                          | Description                                                                                                                                                                                                 |
-| -------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`startDate`**      | <code>any</code>              | Start date from which to get data                                                                                                                                                                           |
-| **`endDate`**        | <code>any</code>              | End date from which to get data                                                                                                                                                                             |
-| **`dataType`**       | <code>string</code>           | Datatype to be queried                                                                                                                                                                                      |
-| **`value`**          | <code>string \| number</code> | Value of corresponding Datatype                                                                                                                                                                             |
-| **`sourceName`**     | <code>string</code>           | The source that produced this data. In iOS this is ignored and set automatically to the name of your app.                                                                                                   |
-| **`sourceBundleId`** | <code>string</code>           | The complete package of the source that produced this data. In Android, if not specified, it's assigned to the package of the App. In iOS this is ignored and set automatically to the bunde id of the app. |
+| Prop                 | Type                          | Description                                                                                               |
+| -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **`startDate`**      | <code>any</code>              | Start date from which to get data                                                                         |
+| **`endDate`**        | <code>any</code>              | End date from which to get data                                                                           |
+| **`dataType`**       | <code>string</code>           | Datatype to be queried                                                                                    |
+| **`value`**          | <code>string \| number</code> | Value of corresponding Datatype                                                                           |
+| **`sourceName`**     | <code>string</code>           | The source that produced this data. In iOS this is ignored and set automatically to the name of your app. |
+| **`sourceBundleId`** | <code>string</code>           |                                                                                                           |
 
 </docgen-api>

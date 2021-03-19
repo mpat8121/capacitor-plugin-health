@@ -53,12 +53,11 @@ export interface HealthStoreOptions {
   /**
    * The source that produced this data. In iOS this is ignored and
    * set automatically to the name of your app.
+   * @deprecated Set automatically to the bunde id of the app.
    */
-  sourceName: string;
+  sourceName?: string;
   /**
-   * The complete package of the source that produced this data.
-   * In Android, if not specified, it's assigned to the package of the App. In iOS this is ignored and
-   * set automatically to the bunde id of the app.
+   * @deprecated Set automatically to the bunde id of the app.
    */
   sourceBundleId?: string;
 }
@@ -91,19 +90,46 @@ export interface HealthData {
    * The complete package of the source that produced this data.
    * In Android, if not specified, it's assigned to the package of the App. In iOS this is ignored and
    * set automatically to the bunde id of the app.
+   * 
    */
   sourceBundleId: string;
+}
+/**
+ * @hidden
+ * @deprecated handled within java and swift
+ */
+export interface HealthRequestTypes {
+  types: AndroidHealthDataType[] | AppleHealthDataType[];
+}
+/**
+ * @hidden
+ */
+export enum AndroidHealthDataType {
+  HEIGHT = 'height',
+  WEIGHT = 'weight',
+  FAT_PERCENTAGE = 'fat_percentage'
+}
+/**
+ * @hidden
+ */
+export enum AppleHealthDataType {
+  HEIGHT = 'height',
+  WEIGHT = 'weight',
+  FAT_PERCENTAGE = 'fat_percentage',
+  BMI = 'bmi',
+  WAIST = 'waist'
 }
 
 /**
  * @name Health
  * @description
- * A Capacitor 3  plugin that abstracts fitness and health repositories like Apple HealthKit or Google Fit.
+ * A Capacitor 3 plugin that abstracts fitness and health repositories like Apple HealthKit or Google Fit.
  * 
  * @interfaces
  * HealthQueryOptions
  * HealthStoreOptions
  * HealthData
+ * HealthRequestTypes
  */
 export interface HealthPlugin {
   /**
@@ -113,11 +139,17 @@ export interface HealthPlugin {
    */
   isAvailable(): Promise<boolean>;
   /**
+   * Check authorisation from the user to access Health app data
+   * @return Promise<boolean>
+   * @since 0.0.1
+   */
+  checkAuth(): Promise<any>;
+  /**
    * Request authorisation from the user to access Health app data
    * @return Promise<boolean>
    * @since 0.0.1
    */
-  requestAuth(options: {}): Promise<boolean>;
+  requestAuth(): Promise<boolean>;
   /**
    * Retrieves data from Health app
    * @param options: HealthOptions
