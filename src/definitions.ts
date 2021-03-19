@@ -53,12 +53,11 @@ export interface HealthStoreOptions {
   /**
    * The source that produced this data. In iOS this is ignored and
    * set automatically to the name of your app.
+   * @deprecated Set automatically to the bunde id of the app.
    */
-  sourceName: string;
+  sourceName?: string;
   /**
-   * The complete package of the source that produced this data.
-   * In Android, if not specified, it's assigned to the package of the App. In iOS this is ignored and
-   * set automatically to the bunde id of the app.
+   * @deprecated Set automatically to the bunde id of the app.
    */
   sourceBundleId?: string;
 }
@@ -91,11 +90,13 @@ export interface HealthData {
    * The complete package of the source that produced this data.
    * In Android, if not specified, it's assigned to the package of the App. In iOS this is ignored and
    * set automatically to the bunde id of the app.
+   * 
    */
   sourceBundleId: string;
 }
 /**
  * @hidden
+ * @deprecated handled within java and swift
  */
 export interface HealthRequestTypes {
   types: AndroidHealthDataType[] | AppleHealthDataType[];
@@ -148,7 +149,7 @@ export interface HealthPlugin {
    * @return Promise<boolean>
    * @since 0.0.1
    */
-  requestAuth(options: HealthRequestTypes): Promise<boolean>;
+  requestAuth(): Promise<boolean>;
   /**
    * Retrieves data from Health app
    * @param options: HealthOptions

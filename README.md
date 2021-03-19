@@ -15,11 +15,10 @@ npx cap sync
 
 * [`isAvailable()`](#isavailable)
 * [`checkAuth()`](#checkauth)
-* [`requestAuth(...)`](#requestauth)
+* [`requestAuth()`](#requestauth)
 * [`query(...)`](#query)
 * [`store(...)`](#store)
 * [Interfaces](#interfaces)
-* [Enums](#enums)
 
 </docgen-index>
 
@@ -56,17 +55,13 @@ Check authorisation from the user to access Health app data
 --------------------
 
 
-### requestAuth(...)
+### requestAuth()
 
 ```typescript
-requestAuth(options: HealthRequestTypes) => any
+requestAuth() => any
 ```
 
 Request authorisation from the user to access Health app data
-
-| Param         | Type                                                              |
-| ------------- | ----------------------------------------------------------------- |
-| **`options`** | <code><a href="#healthrequesttypes">HealthRequestTypes</a></code> |
 
 **Returns:** <code>any</code>
 
@@ -116,13 +111,6 @@ Saves data in Health app
 ### Interfaces
 
 
-#### HealthRequestTypes
-
-| Prop        | Type            |
-| ----------- | --------------- |
-| **`types`** | <code>{}</code> |
-
-
 #### HealthQueryOptions
 
 | Prop            | Type                | Description                                                    |
@@ -147,36 +135,13 @@ Saves data in Health app
 
 #### HealthStoreOptions
 
-| Prop                 | Type                          | Description                                                                                                                                                                                                 |
-| -------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`startDate`**      | <code>any</code>              | Start date from which to get data                                                                                                                                                                           |
-| **`endDate`**        | <code>any</code>              | End date from which to get data                                                                                                                                                                             |
-| **`dataType`**       | <code>string</code>           | Datatype to be queried                                                                                                                                                                                      |
-| **`value`**          | <code>string \| number</code> | Value of corresponding Datatype                                                                                                                                                                             |
-| **`sourceName`**     | <code>string</code>           | The source that produced this data. In iOS this is ignored and set automatically to the name of your app.                                                                                                   |
-| **`sourceBundleId`** | <code>string</code>           | The complete package of the source that produced this data. In Android, if not specified, it's assigned to the package of the App. In iOS this is ignored and set automatically to the bunde id of the app. |
-
-
-### Enums
-
-
-#### AndroidHealthDataType
-
-| Members              | Value                         |
-| -------------------- | ----------------------------- |
-| **`HEIGHT`**         | <code>'height'</code>         |
-| **`WEIGHT`**         | <code>'weight'</code>         |
-| **`FAT_PERCENTAGE`** | <code>'fat_percentage'</code> |
-
-
-#### AppleHealthDataType
-
-| Members              | Value                         |
-| -------------------- | ----------------------------- |
-| **`HEIGHT`**         | <code>'height'</code>         |
-| **`WEIGHT`**         | <code>'weight'</code>         |
-| **`FAT_PERCENTAGE`** | <code>'fat_percentage'</code> |
-| **`BMI`**            | <code>'bmi'</code>            |
-| **`WAIST`**          | <code>'waist'</code>          |
+| Prop                 | Type                          | Description                                                                                               |
+| -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **`startDate`**      | <code>any</code>              | Start date from which to get data                                                                         |
+| **`endDate`**        | <code>any</code>              | End date from which to get data                                                                           |
+| **`dataType`**       | <code>string</code>           | Datatype to be queried                                                                                    |
+| **`value`**          | <code>string \| number</code> | Value of corresponding Datatype                                                                           |
+| **`sourceName`**     | <code>string</code>           | The source that produced this data. In iOS this is ignored and set automatically to the name of your app. |
+| **`sourceBundleId`** | <code>string</code>           |                                                                                                           |
 
 </docgen-api>
