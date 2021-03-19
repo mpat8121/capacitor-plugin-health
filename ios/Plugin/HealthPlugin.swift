@@ -84,11 +84,11 @@ public class HealthPlugin: CAPPlugin {
             call.reject("Must provide a value")
             return
         }
-        guard let start = call.options["startDate"] as? Date else {
+        guard let start = call.getDate("startDate") else {
             call.reject("Must provide start date")
             return
         }
-        guard let end = call.options["endDate"] as? Date else {
+        guard let end = call.getDate("endDate") else {
             call.reject("Must provide end date")
             return
         }
