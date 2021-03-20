@@ -13,7 +13,7 @@ export interface HealthQueryOptions {
   /**
    * Datatype to be queried
    */
-  dataType: string;
+  dataType: HealthDataType;
   /**
    * Optional limit the number of values returned. Defaults to 1000
    */
@@ -45,14 +45,12 @@ export interface HealthStoreOptions {
   /**
    * Datatype to be queried
    */
-  dataType: string;
+  dataType: HealthDataType;
   /**
    * Value of corresponding Datatype
    */
   value: string | number;
   /**
-   * The source that produced this data. In iOS this is ignored and
-   * set automatically to the name of your app.
    * @deprecated Set automatically to the bunde id of the app.
    */
   sourceName?: string;
@@ -99,25 +97,25 @@ export interface HealthData {
  * @deprecated handled within java and swift
  */
 export interface HealthRequestTypes {
-  types: AndroidHealthDataType[] | AppleHealthDataType[];
+  types: HealthDataType[];
 }
 /**
  * @hidden
  */
-export enum AndroidHealthDataType {
-  HEIGHT = 'height',
-  WEIGHT = 'weight',
-  FAT_PERCENTAGE = 'fat_percentage'
-}
-/**
- * @hidden
- */
-export enum AppleHealthDataType {
+export enum HealthDataType {
   HEIGHT = 'height',
   WEIGHT = 'weight',
   FAT_PERCENTAGE = 'fat_percentage',
   BMI = 'bmi',
   WAIST = 'waist'
+}
+/**
+ * @hidden
+ */
+export interface HealthResponse {
+  success: boolean;
+  message: string;
+  data: any;
 }
 
 /**
@@ -134,22 +132,22 @@ export enum AppleHealthDataType {
 export interface HealthPlugin {
   /**
    * Checks if HealthKit is available
-   * @return Promise<boolean>
-   * @since 0.0.1
+   * @return Promise<HealthResponse>
+   * @since 0.0.2
    */
-  isAvailable(): Promise<boolean>;
+  isAvailable(): Promise<HealthResponse>;
   /**
    * Check authorisation from the user to access Health app data
-   * @return Promise<boolean>
-   * @since 0.0.1
+   * @return Promise<HealthResponse>
+   * @since 0.0.2
    */
-  checkAuth(): Promise<any>;
+  checkAuth(): Promise<HealthResponse>;
   /**
    * Request authorisation from the user to access Health app data
-   * @return Promise<boolean>
-   * @since 0.0.1
+   * @return Promise<HealthResponse>
+   * @since 0.0.2
    */
-  requestAuth(): Promise<boolean>;
+  requestAuth(): Promise<HealthResponse>;
   /**
    * Retrieves data from Health app
    * @param options: HealthOptions
@@ -160,8 +158,8 @@ export interface HealthPlugin {
   /**
    * Saves data in Health app
    * @param options: HealthOptions
-   * @return Promise<any>
-   * @since 0.0.1
+   * @return Promise<HealthResponse>
+   * @since 0.0.2
    */
-  store(options: HealthStoreOptions): Promise<any>;
+  store(options: HealthStoreOptions): Promise<HealthResponse>;
 }

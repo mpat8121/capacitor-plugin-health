@@ -1,47 +1,47 @@
 import { WebPlugin } from '@capacitor/core';
 
-import type { HealthPlugin } from './definitions';
+import type { HealthPlugin, HealthData, HealthResponse } from './definitions';
 
 export class HealthWeb extends WebPlugin implements HealthPlugin {
   /**
    * Checks if HealthKit is available
-   * @return Promise<boolean>
+   * @return Promise<HealthResponse>
    * @since 0.0.1
    */
-  async isAvailable(): Promise<boolean> {
+  async isAvailable(): Promise<HealthResponse> {
     throw this.unavailable('Health API not available in this browser.');
   }
   /**
    * Request authorisation from the user to access Health app data
-   * @return Promise<boolean>
+   * @return Promise<HealthResponse>
    * @since 0.0.1
    */
-  async requestAuth(): Promise<boolean> {
+  async requestAuth(): Promise<HealthResponse> {
     throw this.unavailable('Health API not available in this browser.');
   }
    /**
    * Check authorisation from the user to access Health app data
-   * @return Promise<boolean>
+   * @return Promise<HealthResponse>
    * @since 0.0.1
    */
-  async checkAuth(): Promise<boolean> {
+  async checkAuth(): Promise<HealthResponse> {
     throw this.unavailable('Health API not available in this browser.');
   }
   /**
    * Retrieves data from Health app
-   * @return Promise<any>
+   * @return Promise<HealthData[]>
    * @since 0.0.1
    */
-  async query(): Promise<any> {
+  async query(): Promise<HealthData[]> {
     throw this.unavailable('Health API not available in this browser.');
   }
 
   /**
    * Saves data in Health app
-   * @return Promise<any>
+   * @return Promise<HealthResponse>
    * @since 0.0.1
    */
-  async store(): Promise<any> {
+  async store(): Promise<HealthResponse> {
     throw this.unavailable('Health API not available in this browser.');
   }
 }
