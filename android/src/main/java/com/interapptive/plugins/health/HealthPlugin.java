@@ -1,34 +1,24 @@
 package com.interapptive.plugins.health;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
-import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.result.DataReadResponse;
-import com.google.android.gms.tasks.Task;
 
 import org.json.JSONException;
 
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
-
-import androidx.activity.result.ActivityResult;
 
 @CapacitorPlugin(name = "Health")
 public class HealthPlugin extends Plugin {
@@ -42,7 +32,7 @@ public class HealthPlugin extends Plugin {
     public static Map<String, DataType> datatypes = new HashMap<String, DataType>();
     private final String tag = "---- IA HEALTH PLUGIN";
     static {
-        datatypes.put("height", DataType.TYPE_HEIGHT);
+//        datatypes.put("height", DataType.TYPE_HEIGHT);
         datatypes.put("weight", DataType.TYPE_WEIGHT);
         datatypes.put("fat_percentage", DataType.TYPE_BODY_FAT_PERCENTAGE);
     }
@@ -55,10 +45,11 @@ public class HealthPlugin extends Plugin {
         super.load();
         context = getContext();
         // 1. Create a FitnessOptions instance, declaring the data types and access type
-        // Build this somewhere on this page on request load
+
+        // Optional for future implementation
+        // .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
+        // .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_WRITE)
         fitnessOptions = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
-                .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_WRITE)
                 .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_READ)
                 .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_WRITE)
                 .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_WRITE)
@@ -69,12 +60,13 @@ public class HealthPlugin extends Plugin {
     }
 
     /**
-     * detects if a) Google APIs are available, b) Google Fit is actually installed
+     * Detects if:
+     * a) Google APIs are available,
+     * b) Google Fit is actually installed
      * @param call Capacitor Plugin Call
      */
     @PluginMethod
     public void isAvailable(PluginCall call) {
-        // Validation of call object here
         JSObject ret = new JSObject();
         try {
             final Boolean result = implementation.isAvailable();
@@ -86,12 +78,14 @@ public class HealthPlugin extends Plugin {
             }
             call.resolve(ret);
         } catch (Exception exception) {
-            call.reject(exception.getMessage(),exception);
+            call.reject(exception.getMessage(), exception);
         }
     }
 
     /**
-     * https://gist.github.com/dariosalvi78/66aa2635abd02f4aa4899628daf74cc7#file-mainactivity-java-L90
+     * Attempts to connect to Google Fit API, if:
+     * a) Already connected, it will return data via accessGoogleFit()
+     * b) Not connected, runs through authentication and permission then returns data
      * @param call Capacitor Plugin Call
      */
     @PluginMethod
@@ -111,10 +105,14 @@ public class HealthPlugin extends Plugin {
                     fitnessOptions);
             // Returns to MainActivity onActivityResult()
         } else {
-            implementation.accessGoogleFit(call);
+            implementation.accessGoogleFitData(call);
         }
     }
 
+    /**
+     * Result of requestAuth function - called from MainActivity.java
+     * @param requestCode request code, i.e. GOOGLE_FIT_PERMISSIONS_REQUEST_CODE
+     */
     public void processActivityResult(int requestCode) {
         PluginCall savedCall = Util.getCall();
         Context savedContext = Util.getContext();
@@ -124,7 +122,7 @@ public class HealthPlugin extends Plugin {
                 fitnessOptions
         );
         if(requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
-            newHealth.accessGoogleFit(savedCall);
+            newHealth.accessGoogleFitData(savedCall);
         } else {
             JSObject ret = new JSObject();
             ret.put("success", false);
@@ -135,28 +133,9 @@ public class HealthPlugin extends Plugin {
 
     /**
      *
-     * @param call
-     */
-    @PluginMethod
-    public void checkAuth(PluginCall call) {
-        try {
-            // Cordova version does:
-            // 1. check if the app is authorised to use Google fitness APIs
-            // 2. build the read and read-write sets
-            // 3. calls  requestDynamicPermissions(); NOT REQ'd
-            // 4. calls accessGoogleFit();
-            implementation.accessGoogleFit(call);
-
-        } catch (Exception exception) {
-            call.reject(exception.getMessage(),exception);
-        }
-    }
-
-    /**
-     *
-     * @param call
-     * @throws JSONException
-     * @throws ParseException
+     * @param call Capacitor Plugin Call
+     * @throws JSONException Explosion
+     * @throws ParseException Parsed Explosion
      */
     @PluginMethod
     public void query(PluginCall call) throws JSONException, ParseException {
@@ -201,7 +180,7 @@ public class HealthPlugin extends Plugin {
 
     /**
      *
-     * @param call
+     * @param call Capacitor Plugin Call
      */
     @PluginMethod
     public void store(PluginCall call) {

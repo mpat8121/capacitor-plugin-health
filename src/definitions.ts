@@ -140,6 +140,7 @@ export interface HealthPlugin {
    * Check authorisation from the user to access Health app data
    * @return Promise<HealthResponse>
    * @since 0.0.2
+   * @deprecated not used as far as I can tell
    */
   checkAuth(): Promise<HealthResponse>;
   /**

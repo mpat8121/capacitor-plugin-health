@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Health {
 
-    private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     private final Context context;
     private final FitnessOptions fitnessOptions;
     private final String tag = "---- IA HEALTH PLUGIN";
@@ -43,7 +42,6 @@ public class Health {
         this.context = context;
         this.fitnessOptions = fitnessOptions;
     }
-
 
     /**
      * Detects if:
@@ -74,25 +72,28 @@ public class Health {
     }
 
     /**
-     *   5. After the user has authorized access to the data requested, create a fitness client (for
-     *      example, a HistoryClient to read and/or write historic fitness data) based on your app's
-     *      purpose and needs:
+     * Returns google fit data to plugin call
+     * @param call The Current Capacitor Plugin Call to return data to
      */
-    public final void accessGoogleFit(PluginCall call) {
+    public final void accessGoogleFitData(PluginCall call) {
 
         Calendar cal = Calendar.getInstance ();
         cal.setTime (new Date ());
         long endTime = cal.getTimeInMillis ();
         cal.add (Calendar.YEAR, -1);
         long startTime = cal.getTimeInMillis ();
+        // Option for future implementation
+        // .read(DataType.TYPE_HEIGHT)
         DataReadRequest readRequest = (new DataReadRequest.Builder())
                 .read(DataType.TYPE_WEIGHT)
-                .read(DataType.TYPE_HEIGHT)
                 .read(DataType.TYPE_BODY_FAT_PERCENTAGE)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .build();
 
-        final GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(context, fitnessOptions);
+        final GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(
+                context,
+                fitnessOptions
+        );
 
         Fitness.getHistoryClient(context, account)
                 .readData(readRequest)
@@ -123,7 +124,8 @@ public class Health {
                                     if (sourceBundleId != null) obj.put("sourceBundleId", sourceBundleId);
                                 }
 
-                                //reference for fields: https://developers.google.com/android/reference/com/google/android/gms/fitness/data/Field.html
+                                //reference for fields:
+                                // https://developers.google.com/android/reference/com/google/android/gms/fitness/data/Field.html
                                 if (dt.equals(DataType.TYPE_HEIGHT)) {
                                     float height = datapoint.getValue(Field.FIELD_HEIGHT).asFloat();
                                     obj.put("value", height);
@@ -167,17 +169,17 @@ public class Health {
     }
 
     /**
-     *
-     * @param data
-     * @param dt
+     * Read Google Fit Data
+     * @param data Data read params
+     * @param dt Data Type
      * @return
-     * @throws JSONException
      * @throws ParseException
      */
-    public DataReadResponse query(JSObject data, DataType dt) throws JSONException, ParseException {
+    public DataReadResponse query(JSObject data, DataType dt) throws ParseException {
         String st = data.getString("startDate");
         String et = data.getString("endDate");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        final String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+        SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 
         Date startDate = sdf.parse(st);
         long sDate = startDate.getTime();
