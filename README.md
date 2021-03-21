@@ -15,7 +15,7 @@ npx cap sync
 
 * [`isAvailable()`](#isavailable)
 * [`checkAuth()`](#checkauth)
-* [`requestAuth()`](#requestauth)
+* [`requestAuth(...)`](#requestauth)
 * [`query(...)`](#query)
 * [`store(...)`](#store)
 * [Interfaces](#interfaces)
@@ -56,13 +56,17 @@ Check authorisation from the user to access Health app data
 --------------------
 
 
-### requestAuth()
+### requestAuth(...)
 
 ```typescript
-requestAuth() => any
+requestAuth(options?: HealthRequestAuthOptions | undefined) => any
 ```
 
 Request authorisation from the user to access Health app data
+
+| Param         | Type                                                                          |
+| ------------- | ----------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#healthrequestauthoptions">HealthRequestAuthOptions</a></code> |
 
 **Returns:** <code>any</code>
 
@@ -119,6 +123,14 @@ Saves data in Health app
 | **`success`** | <code>boolean</code> |
 | **`message`** | <code>string</code>  |
 | **`data`**    | <code>any</code>     |
+
+
+#### HealthRequestAuthOptions
+
+| Prop             | Type                 | Description                                        |
+| ---------------- | -------------------- | -------------------------------------------------- |
+| **`returnData`** | <code>boolean</code> | For Android - option to return data during request |
+| **`limit`**      | <code>number</code>  |                                                    |
 
 
 #### HealthQueryOptions

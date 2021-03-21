@@ -76,6 +76,10 @@ public class Health {
      * @param call The Current Capacitor Plugin Call to return data to
      */
     public final void accessGoogleFitData(PluginCall call) {
+        int limit = 1000;
+        if(call.getData().has("limit")) {
+            limit = 75;
+        }
 
         Calendar cal = Calendar.getInstance ();
         cal.setTime (new Date ());
@@ -88,6 +92,7 @@ public class Health {
                 .read(DataType.TYPE_WEIGHT)
                 .read(DataType.TYPE_BODY_FAT_PERCENTAGE)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .setLimit(limit)
                 .build();
 
         final GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(

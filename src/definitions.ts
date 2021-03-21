@@ -102,6 +102,16 @@ export interface HealthRequestTypes {
 /**
  * @hidden
  */
+export interface HealthRequestAuthOptions {
+  /**
+   * For Android - option to return data during request
+   */
+  returnData: boolean;
+  limit?: number;
+}
+/**
+ * @hidden
+ */
 export enum HealthDataType {
   HEIGHT = 'height',
   WEIGHT = 'weight',
@@ -126,6 +136,7 @@ export interface HealthResponse {
  * @interfaces
  * HealthQueryOptions
  * HealthStoreOptions
+ * HealthRequestAuthOptions
  * HealthData
  * HealthRequestTypes
  */
@@ -145,10 +156,11 @@ export interface HealthPlugin {
   checkAuth(): Promise<HealthResponse>;
   /**
    * Request authorisation from the user to access Health app data
+   * @param data optional (false) for android to prevent default data being sent back
    * @return Promise<HealthResponse>
    * @since 0.0.2
    */
-  requestAuth(): Promise<HealthResponse>;
+  requestAuth(options?: HealthRequestAuthOptions): Promise<HealthResponse>;
   /**
    * Retrieves data from Health app
    * @param options: HealthOptions

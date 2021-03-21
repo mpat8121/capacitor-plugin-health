@@ -105,7 +105,22 @@ public class HealthPlugin extends Plugin {
                     fitnessOptions);
             // Returns to MainActivity onActivityResult()
         } else {
-            implementation.accessGoogleFitData(call);
+            // Check whether app wants data returned to it
+            JSObject data = call.getData();
+            if(data.has("returnData")) {
+                Boolean dataType = call.getData().getBool("returnData");
+                if(!dataType) {
+                    JSObject ret = new JSObject();
+                    ret.put("success", true);
+                    ret.put("message", "Connected");
+                    call.resolve(ret);
+                } else {
+                    implementation.accessGoogleFitData(call);
+                }
+            } else {
+                implementation.accessGoogleFitData(call);
+            }
+
         }
     }
 
@@ -134,11 +149,9 @@ public class HealthPlugin extends Plugin {
     /**
      *
      * @param call Capacitor Plugin Call
-     * @throws JSONException Explosion
-     * @throws ParseException Parsed Explosion
      */
     @PluginMethod
-    public void query(PluginCall call) throws JSONException, ParseException {
+    public void query(PluginCall call) {
         JSObject ret = new JSObject();
         JSObject data = call.getData();
         if(!data.has("startDate")) {
@@ -187,50 +200,58 @@ public class HealthPlugin extends Plugin {
         JSObject ret = new JSObject();
         JSObject data = call.getData();
 
+        Boolean valid = true;
+
         if(!data.has("startDate")) {
+            valid = false;
             ret.put("success", false);
             ret.put("message", "Missing argument startDate");
             call.resolve(ret);
         }
 
         if(!data.has("endDate")) {
+            valid = false;
             ret.put("success", false);
             ret.put("message", "Missing argument endDate");
             call.resolve(ret);
         }
 
         if(!data.has("value")) {
+            valid = false;
             ret.put("success", false);
             ret.put("message", "Missing argument value");
             call.resolve(ret);
         }
 
-        if(!data.has("sourceName")) {
-            ret.put("success", false);
-            ret.put("message", "Missing argument sourceName");
-            call.resolve(ret);
-        }
-
         if(!data.has("dataType")) {
+            valid = false;
             ret.put("success", false);
             ret.put("message", "Missing argument dataType");
             call.resolve(ret);
         }
+
         String dataType = call.getData().getString("dataType");
         DataType dt = datatypes.get(dataType);
         if(dt == null) {
+            valid = false;
             ret.put("success", false);
             ret.put("message", "DataType " + dataType + " not supported");
             call.resolve(ret);
         }
 
-        try {
-            final Boolean result = implementation.store(data, dt);
-            ret.put("success", result);
-            ret.put("message", "Not implemented yet.");
-            call.resolve(ret);
-        } catch (Exception exception) {
-            call.reject(exception.getMessage(),exception);
+        if(valid) {
+            try {
+                final Boolean result = implementation.store(data, dt);
+                ret.put("success", result);
+                if(result) {
+                    ret.put("message", "Measurement synced successfully.");
+                } else {
+                    ret.put("message", "Measurement sync failed.");
+                }
+                call.resolve(ret);
+            } catch (Exception exception) {
+                call.reject(exception.getMessage(), exception);
+            }
         }
     }
 }
