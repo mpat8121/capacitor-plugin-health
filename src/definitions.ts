@@ -115,7 +115,7 @@ export enum HealthDataType {
 export interface HealthResponse {
   success: boolean;
   message: string;
-  data: any;
+  data?: any;
 }
 
 /**
