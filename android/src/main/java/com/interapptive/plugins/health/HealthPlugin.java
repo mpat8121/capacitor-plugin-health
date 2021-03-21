@@ -57,11 +57,12 @@ public class HealthPlugin extends Plugin {
         // 1. Create a FitnessOptions instance, declaring the data types and access type
         // Build this somewhere on this page on request load
         fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
                 .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_WRITE)
-//                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_READ)
                 .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_WRITE)
                 .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_WRITE)
-//                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_READ)
                 .build();
 
         implementation = new Health(context, fitnessOptions);
@@ -77,7 +78,7 @@ public class HealthPlugin extends Plugin {
         JSObject ret = new JSObject();
         try {
             final Boolean result = implementation.isAvailable();
-            ret.put("result", result);
+            ret.put("success", result);
             if(result) {
                 ret.put("message", "Google fit is available");
             } else {
@@ -117,19 +118,16 @@ public class HealthPlugin extends Plugin {
     public void processActivityResult(int requestCode) {
         PluginCall savedCall = Util.getCall();
         Context savedContext = Util.getContext();
-        FitnessOptions opts = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
-//                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_READ)
-                .addDataType(DataType.TYPE_WEIGHT, FitnessOptions.ACCESS_WRITE)
-//                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_WRITE)
-                .addDataType(DataType.TYPE_BODY_FAT_PERCENTAGE, FitnessOptions.ACCESS_READ)
-                .build();
-        Health newHealth = new Health(savedContext, opts);
+
+        Health newHealth = new Health(
+                savedContext,
+                fitnessOptions
+        );
         if(requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
             newHealth.accessGoogleFit(savedCall);
         } else {
             JSObject ret = new JSObject();
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument dataType");
             this.call.resolve(ret);
         }
@@ -165,35 +163,35 @@ public class HealthPlugin extends Plugin {
         JSObject ret = new JSObject();
         JSObject data = call.getData();
         if(!data.has("startDate")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument startDate");
             call.resolve(ret);
         }
         if(!data.has("endDate")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument endDate");
             call.resolve(ret);
         }
         if(!data.has("dataType")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument dataType");
             call.resolve(ret);
         }
         if(!data.has("limit")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument limit");
             call.resolve(ret);
         }
         String dataType = call.getData().getString("dataType");
         DataType dt = datatypes.get(dataType);
         if(dt == null) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "DataType " + dataType + " not supported");
             call.resolve(ret);
         }
         try {
             final DataReadResponse result = implementation.query(data, dt);
-            ret.put("result", result);
+            ret.put("success", result);
             ret.put("message", "Query data retrieved");
             call.resolve(ret);
         } catch (Exception exception) {
@@ -211,45 +209,45 @@ public class HealthPlugin extends Plugin {
         JSObject data = call.getData();
 
         if(!data.has("startDate")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument startDate");
             call.resolve(ret);
         }
 
         if(!data.has("endDate")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument endDate");
             call.resolve(ret);
         }
 
         if(!data.has("value")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument value");
             call.resolve(ret);
         }
 
         if(!data.has("sourceName")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument sourceName");
             call.resolve(ret);
         }
 
         if(!data.has("dataType")) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "Missing argument dataType");
             call.resolve(ret);
         }
         String dataType = call.getData().getString("dataType");
         DataType dt = datatypes.get(dataType);
         if(dt == null) {
-            ret.put("result", false);
+            ret.put("success", false);
             ret.put("message", "DataType " + dataType + " not supported");
             call.resolve(ret);
         }
 
         try {
             final Boolean result = implementation.store(data, dt);
-            ret.put("result", result);
+            ret.put("success", result);
             ret.put("message", "Not implemented yet.");
             call.resolve(ret);
         } catch (Exception exception) {

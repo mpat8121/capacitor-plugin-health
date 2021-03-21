@@ -149,7 +149,7 @@ public class Health {
                         }
 
                         JSObject ret = new JSObject();
-                        ret.put("result", true);
+                        ret.put("success", true);
                         ret.put("message", "Successfully connected to Google Fit API");
                         ret.put("data", resultSets);
                         call.resolve(ret);
@@ -159,7 +159,7 @@ public class Health {
                     Log.d(tag, "OnFailure()", e);
                     if(!call.getCallbackId().isEmpty()) {
                         JSObject ret = new JSObject();
-                        ret.put("result", false);
+                        ret.put("success", false);
                         ret.put("message", e.getMessage());
                         call.resolve(ret);
                     }
