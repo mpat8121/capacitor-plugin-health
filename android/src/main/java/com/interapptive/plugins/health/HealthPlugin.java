@@ -97,7 +97,7 @@ public class HealthPlugin extends Plugin {
         if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
             this.call = call;
             Util.setCall(call);
-            Util.setContext(context);
+//            Util.setContext(context);
             GoogleSignIn.requestPermissions(
                     getActivity(),
                     GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
@@ -105,22 +105,10 @@ public class HealthPlugin extends Plugin {
                     fitnessOptions);
             // Returns to MainActivity onActivityResult()
         } else {
-            // Check whether app wants data returned to it
-            JSObject data = call.getData();
-            if(data.has("returnData")) {
-                Boolean dataType = call.getData().getBool("returnData");
-                if(!dataType) {
-                    JSObject ret = new JSObject();
-                    ret.put("success", true);
-                    ret.put("message", "Connected");
-                    call.resolve(ret);
-                } else {
-                    implementation.accessGoogleFitData(call);
-                }
-            } else {
-                implementation.accessGoogleFitData(call);
-            }
-
+            JSObject ret = new JSObject();
+            ret.put("success", true);
+            ret.put("message", "Connected to Google Fit");
+            this.call.resolve(ret);
         }
     }
 
@@ -130,20 +118,15 @@ public class HealthPlugin extends Plugin {
      */
     public void processActivityResult(int requestCode) {
         PluginCall savedCall = Util.getCall();
-        Context savedContext = Util.getContext();
-
-        Health newHealth = new Health(
-                savedContext,
-                fitnessOptions
-        );
+        JSObject ret = new JSObject();
         if(requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
-            newHealth.accessGoogleFitData(savedCall);
+            ret.put("success", true);
+            ret.put("message", "Connected to Google Fit");
         } else {
-            JSObject ret = new JSObject();
             ret.put("success", false);
-            ret.put("message", "Missing argument dataType");
-            this.call.resolve(ret);
+            ret.put("message", "Unable to connect");
         }
+        savedCall.resolve(ret);
     }
 
     /**
@@ -191,6 +174,22 @@ public class HealthPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void queryAll(PluginCall call) {
+        GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(
+                context,
+                fitnessOptions);
+
+        if (GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+            implementation.accessGoogleFitData(call);
+        } else {
+            JSObject ret = new JSObject();
+            ret.put("success", false);
+            ret.put("message", "Unable to return query data");
+            call.resolve(ret);
+        }
+    }
+
     /**
      *
      * @param call Capacitor Plugin Call
@@ -200,7 +199,7 @@ public class HealthPlugin extends Plugin {
         JSObject ret = new JSObject();
         JSObject data = call.getData();
 
-        Boolean valid = true;
+        boolean valid = true;
 
         if(!data.has("startDate")) {
             valid = false;
@@ -246,7 +245,7 @@ public class HealthPlugin extends Plugin {
                 if(result) {
                     ret.put("message", "Measurement synced successfully.");
                 } else {
-                    ret.put("message", "Measurement sync failed.");
+                    ret.put("message", "Measurement sync failed or not logged in.");
                 }
                 call.resolve(ret);
             } catch (Exception exception) {

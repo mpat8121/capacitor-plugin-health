@@ -1,7 +1,16 @@
 /**
  * @hidden
  */
-export interface HealthQueryOptions {
+export interface HealthQueryAllOptions {
+  /**
+ * (Optional) limit the number of values returned. Defaults to 1000
+ */
+  limit?: number;
+}
+/**
+ * @hidden
+ */
+export interface HealthQueryOptions extends HealthQueryAllOptions {
   /**
    * Start date from which to get data
    */
@@ -14,10 +23,6 @@ export interface HealthQueryOptions {
    * Datatype to be queried
    */
   dataType: HealthDataType;
-  /**
-   * Optional limit the number of values returned. Defaults to 1000
-   */
-  limit?: number;
   /**
    * Optional indicator to sort values ascending or descending
    * NOT IMPLEMENTED
@@ -50,14 +55,6 @@ export interface HealthStoreOptions {
    * Value of corresponding Datatype
    */
   value: string | number;
-  /**
-   * @deprecated Set automatically to the bunde id of the app.
-   */
-  sourceName?: string;
-  /**
-   * @deprecated Set automatically to the bunde id of the app.
-   */
-  sourceBundleId?: string;
 }
 /**
  * @hidden
@@ -88,44 +85,60 @@ export interface HealthData {
    * The complete package of the source that produced this data.
    * In Android, if not specified, it's assigned to the package of the App. In iOS this is ignored and
    * set automatically to the bunde id of the app.
-   * 
    */
   sourceBundleId: string;
 }
 /**
  * @hidden
- * @deprecated handled within java and swift
- */
-export interface HealthRequestTypes {
-  types: HealthDataType[];
-}
-/**
- * @hidden
- */
-export interface HealthRequestAuthOptions {
-  /**
-   * For Android - option to return data during request
-   */
-  returnData: boolean;
-  limit?: number;
-}
-/**
- * @hidden
- */
-export enum HealthDataType {
-  HEIGHT = 'height',
-  WEIGHT = 'weight',
-  FAT_PERCENTAGE = 'fat_percentage',
-  BMI = 'bmi',
-  WAIST = 'waist'
-}
-/**
- * @hidden
  */
 export interface HealthResponse {
+  /**
+   * Response from plugin call
+   */
   success: boolean;
+  /**
+   * String message
+   */
   message: string;
+}
+/**
+ * @hidden
+ */
+export interface HealthQueryResponse extends HealthResponse {
+  /**
+   * (iOS/Android) single data type as result
+   */
+  result: HealthData[];
+  /**
+   * (ANDROID ONLY) - all data object returns HealthData[]'s under
+   * data.weight, data.fat_percentage & data.height
+   */
   data?: any;
+}
+/**
+ * @enum available data types for android &/or ios
+ */
+export enum HealthDataType {
+  /**
+   * IOS/ANDROID - 'height'
+   */
+  HEIGHT = 'height',
+  /**
+  * IOS/ANDROID - 'weight'
+  */
+  WEIGHT = 'weight',
+  /**
+  * IOS/ANDROID - 'fat_percentage'
+  */
+  FAT_PERCENTAGE = 'fat_percentage',
+  /**
+  * IOS ONLY - 'bmi'
+  */
+  BMI = 'bmi',
+  /**
+  * IOS ONLY - 'waist'
+  */
+  WAIST = 'waist'
 }
 
 /**
@@ -134,11 +147,12 @@ export interface HealthResponse {
  * A Capacitor 3 plugin that abstracts fitness and health repositories like Apple HealthKit or Google Fit.
  * 
  * @interfaces
+ * HealthQueryAllOptions
  * HealthQueryOptions
  * HealthStoreOptions
- * HealthRequestAuthOptions
  * HealthData
- * HealthRequestTypes
+ * HealthResponse
+ * HealthQueryResponse
  */
 export interface HealthPlugin {
   /**
@@ -148,26 +162,27 @@ export interface HealthPlugin {
    */
   isAvailable(): Promise<HealthResponse>;
   /**
-   * Check authorisation from the user to access Health app data
-   * @return Promise<HealthResponse>
-   * @since 0.0.2
-   * @deprecated not used as far as I can tell
-   */
-  checkAuth(): Promise<HealthResponse>;
-  /**
    * Request authorisation from the user to access Health app data
    * @param data optional (false) for android to prevent default data being sent back
    * @return Promise<HealthResponse>
    * @since 0.0.2
    */
-  requestAuth(options?: HealthRequestAuthOptions): Promise<HealthResponse>;
+  requestAuth(): Promise<HealthResponse>;
   /**
    * Retrieves data from Health app
    * @param options: HealthOptions
-   * @return Promise<HealthData[]>
+   * @return Promise<HealthQueryResponse>
    * @since 0.0.1
    */
-  query(options: HealthQueryOptions): Promise<HealthData[]>;
+  query(options: HealthQueryOptions): Promise<HealthQueryResponse>;
+  /**
+   * @description ANDROID ONLY AT THE MOMENT
+   * Retrieves data from Health app
+   * @param options: HealthOptions
+   * @return Promise<HealthQueryResponse>
+   * @since 0.0.1
+   */
+  queryAll(options: HealthQueryAllOptions): Promise<HealthQueryResponse>;
   /**
    * Saves data in Health app
    * @param options: HealthOptions

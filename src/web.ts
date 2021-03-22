@@ -1,6 +1,10 @@
 import { WebPlugin } from '@capacitor/core';
 
-import type { HealthPlugin, HealthData, HealthResponse } from './definitions';
+import type {
+  HealthPlugin,
+  HealthQueryResponse,
+  HealthResponse
+} from './definitions';
 
 export class HealthWeb extends WebPlugin implements HealthPlugin {
   /**
@@ -19,24 +23,22 @@ export class HealthWeb extends WebPlugin implements HealthPlugin {
   async requestAuth(): Promise<HealthResponse> {
     throw this.unavailable('Health API not available in this browser.');
   }
-   /**
-   * Check authorisation from the user to access Health app data
-   * @return Promise<HealthResponse>
-   * @since 0.0.1
-   * @deprecated note used
-   */
-  async checkAuth(): Promise<HealthResponse> {
-    throw this.unavailable('Health API not available in this browser.');
-  }
   /**
    * Retrieves data from Health app
    * @return Promise<HealthData[]>
    * @since 0.0.1
    */
-  async query(): Promise<HealthData[]> {
+  async query(): Promise<HealthQueryResponse> {
     throw this.unavailable('Health API not available in this browser.');
   }
-
+  /**
+    * Retrieves data from Health app
+    * @return Promise<HealthData[]>
+    * @since 0.0.1
+    */
+  async queryAll(): Promise<HealthQueryResponse> {
+    throw this.unavailable('Health API not available in this browser.');
+  }
   /**
    * Saves data in Health app
    * @return Promise<HealthResponse>

@@ -49,7 +49,7 @@ public class Health {
      * b) Google Fit is installed
      * @return true if Google Fit is installed
      */
-    public Boolean isAvailable() {
+    public boolean isAvailable() {
         GoogleApiAvailability gApi = GoogleApiAvailability.getInstance();
         int apiResult = gApi.isGooglePlayServicesAvailable(context);
         if(apiResult == ConnectionResult.SUCCESS) {
@@ -75,7 +75,7 @@ public class Health {
      * Returns google fit data to plugin call
      * @param call The Current Capacitor Plugin Call to return data to
      */
-    public final void accessGoogleFitData(PluginCall call) {
+    public void accessGoogleFitData(PluginCall call) {
         int limit = 1000;
         if(call.getData().has("limit")) {
             limit = 75;
@@ -214,7 +214,7 @@ public class Health {
      * @throws JSONException
      * @throws ParseException
      */
-    public Boolean store(JSObject data, DataType dt) throws JSONException, ParseException {
+    public boolean store(JSObject data, DataType dt) throws ParseException {
 
         String st = data.getString("startDate");
         String et = data.getString("endDate");
@@ -257,9 +257,13 @@ public class Health {
 
         final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(context);
 
-        Task<Void> insertStatus = Fitness.getHistoryClient(context, account)
-                .insertData(dataSetBuilder.build());
-        return insertStatus.isComplete();
+        if(account != null) {
+            Task<Void> insertStatus = Fitness.getHistoryClient(context, account)
+                    .insertData(dataSetBuilder.build());
+            return insertStatus.isComplete();
+        } else {
+            return false;
+        }
 
     }
 }
