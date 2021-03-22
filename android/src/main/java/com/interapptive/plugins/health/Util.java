@@ -16,11 +16,11 @@ public class Util {
         return utilCall;
     }
 
-    public static void setContext(Context context) {
-        utilContext = context;
-    }
-
-    public static Context getContext() {
-        return utilContext;
-    }
+//    public static void setContext(Context context) {
+//        utilContext = context;
+//    }
+//
+//    public static Context getContext() {
+//        return utilContext;
+//    }
 }
