@@ -3,14 +3,6 @@ import Capacitor
 import HealthKit
 
 var healthStore: HKHealthStore = HKHealthStore();
-// let allTypes = Set([
-//             HKObjectType.quantityType(forIdentifier: .height)!,
-//             HKObjectType.quantityType(forIdentifier: .bodyMass)!,
-//             HKObjectType.quantityType(forIdentifier: .bodyMassIndex)!,
-//             HKObjectType.quantityType(forIdentifier: .leanBodyMass)!,
-//             HKObjectType.quantityType(forIdentifier: .bodyFatPercentage)!,
-//             HKObjectType.quantityType(forIdentifier: .waistCircumference)!
-//             ])
 
 @objc(HealthPlugin)
 public class HealthPlugin: CAPPlugin {
@@ -18,9 +10,9 @@ public class HealthPlugin: CAPPlugin {
 
     @objc func isAvailable(_ call: CAPPluginCall) {
         if HKHealthStore.isHealthDataAvailable() {
-            call.resolve(["available": true])
+            call.resolve(["success": true])
         } else {
-            call.reject("Health not available")
+            call.resolve(["success": false])
         }
     }
 
@@ -29,31 +21,37 @@ public class HealthPlugin: CAPPlugin {
             let allTypes = implementation.getTypes()
             healthStore.requestAuthorization(toShare: allTypes, read: allTypes) { (success, error) in 
                 if !success {
-                    call.reject("Unable to authorize")
+                    call.resolve([
+                        "success": success,
+                        "message": "Unable to authorize"
+                    ])
                     return
                 }
-                call.resolve(["result": success])
+                call.resolve(["success": success])
             }
         } else {
-            call.reject("Health not available")
+            call.resolve([
+                "success": false,
+                "message": "Health not available"
+            ])
         }
     }
 
     @objc func query(_ call: CAPPluginCall) {
         print(call.options as Any)
         guard let _start = call.getDate("startDate") else {
-            call.resolve(["result": false, "message": "Must provide start date"])
+            call.resolve(["success": false, "message": "Must provide start date"])
             return
         }
         guard let _end = call.getDate("endDate") else {
-            call.resolve(["result": false, "message": "Must provide end date"])
+            call.resolve(["success": false, "message": "Must provide end date"])
             return
         }
         guard let dataType = call.options["dataType"] as? String else {
-            return call.resolve(["result": false, "message": "Must provide data type"])
+            return call.resolve(["success": false, "message": "Must provide data type"])
         }
         guard let _limit = call.options["limit"] as? Int else {
-            return call.resolve(["result": false, "message": "Must provide limit"])
+            return call.resolve(["success": false, "message": "Must provide limit"])
         }
 
         let limit: Int = (_limit == 0) ? HKObjectQueryNoLimit : _limit
@@ -61,17 +59,18 @@ public class HealthPlugin: CAPPlugin {
         let predicate = HKQuery.predicateForSamples(withStart: _start, end: _end, options: HKQueryOptions.strictStartDate)
 
         guard let sampleType: HKSampleType = implementation.getQuantityType(typeName: dataType) else {
-                return call.resolve(["result": false, "message": "Error in sample name"])
+                return call.resolve(["success": false, "message": "Error in sample name"])
             }
 
         let query = HKSampleQuery(sampleType: sampleType, predicate: predicate, limit: limit, sortDescriptors: nil) {
             query, results, error in
             guard let samples = results as? [HKQuantitySample] else {
-                call.resolve(["result": false, "message": "Error getting data"])
+                call.resolve(["success": false, "message": "Error getting data"])
                 return
             }
             let output = self.implementation.processResult(typeName: dataType, results: samples)
             call.resolve([
+                "success": true,
                 "message": "Query data retrieved",
                 "result": output
             ])
@@ -81,19 +80,19 @@ public class HealthPlugin: CAPPlugin {
 
     @objc func store(_ call: CAPPluginCall) {
         guard var value = call.options["value"] as? Double else {
-            call.reject("Must provide a value")
+            call.resolve(["success": false, "message": "Must provide a value"])
             return
         }
         guard let start = call.getDate("startDate") else {
-            call.reject("Must provide start date")
+            call.resolve(["success": false, "message": "Must provide start date"])
             return
         }
         guard let end = call.getDate("endDate") else {
-            call.reject("Must provide end date")
+            call.resolve(["success": false, "message": "Must provide end date"])
             return
         }
         guard let dataType = call.options["dataType"] as? String else {
-            return call.reject("Must provide data type")
+            return call.resolve(["success": false, "message": "Must provide data type"])
         }
 
         let measurement = implementation.getObjectType(typeName: dataType)
@@ -109,9 +108,9 @@ public class HealthPlugin: CAPPlugin {
         healthStore.save(newData) {
             success, error in
             if(error != nil) {
-                call.reject("An error occurred")
+                call.resolve(["success": false, "message": "Measurement sync failed"])
             }
-            call.resolve(["success": success])
+            call.resolve(["success": success, "message": "Data saved successfully"])
         }
     }
 }
