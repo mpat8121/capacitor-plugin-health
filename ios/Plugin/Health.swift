@@ -21,7 +21,7 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)
             case "bmi":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)
-            case "bodyFat":
+            case "fat_percentage":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)
             case "waist":
                 return HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)
@@ -57,56 +57,57 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
         return measurement;
     }
     
-    @objc public func processResult(results: [HKQuantitySample]) -> [[String: Any]] {
-        var output: [[String: Any]] = []
+    @objc public func processResult(typeName: String, results: [HKQuantitySample]) -> [String: [Any]] {
+        var output: [String: [Any]] = [:]
+        var values: [Any] = []
         for result in results {
+            var factor: Double?
             var unitName: String?
-                var unit: HKUnit?
-                if result.quantity.is(compatibleWith: HKUnit.meter()) {
-                    unitName = "metre"
-                    unit = HKUnit.meter()
-                } else if result.quantity.is(compatibleWith: HKUnit.gram()) {
-                    unitName = "gram"
-                    unit = HKUnit.gram()
-                } else if result.quantity.is(compatibleWith: HKUnit.percent()) {
-                    unitName = "percentage"
-                    unit = HKUnit.percent()
-                } else if result.quantity.is(compatibleWith: HKUnit.count()) {
-                    unitName = "count"
-                    unit = HKUnit.count()
-                } else {
-                    print("Error: Unknown unit type: ", result.quantity)
-                }
-                let value = result.quantity.doubleValue(for: unit!)
-                output.append(["start": ISO8601DateFormatter().string(from: result.startDate),
-                               "end": ISO8601DateFormatter().string(from: result.endDate),
-                               "units": unitName!,
-                               "value": value
+            var unit: HKUnit?
+            if result.quantity.is(compatibleWith: HKUnit.meter()) {
+                unitName = "metre"
+                unit = HKUnit.meter()
+                factor = 0.01
+            } else if result.quantity.is(compatibleWith: HKUnit.gram()) {
+                unitName = "kilogram"
+                unit = HKUnit.gram()
+                factor = 1000
+            } else if result.quantity.is(compatibleWith: HKUnit.percent()) {
+                unitName = "percentage"
+                unit = HKUnit.percent()
+            } else if result.quantity.is(compatibleWith: HKUnit.count()) {
+                unitName = "count"
+                unit = HKUnit.count()
+            } else {
+                print("Error: Unknown unit type: ", result.quantity)
+            }
+            // Divide by factor - convert grams to Kg for weight, m to cm for waist
+            var value: Double
+            if(factor != nil) {
+                value = result.quantity.doubleValue(for: unit!) / factor!
+            } else {
+                value = result.quantity.doubleValue(for: unit!)
+            }
+            values.append([
+                "startDate": ISO8601DateFormatter().string(from: result.startDate),
+                "endDate": ISO8601DateFormatter().string(from: result.endDate),
+                "units": unitName!,
+                "value": value,
+                "sourceBundleId": "com.apple.Health"
                 ])
         }
+        output[typeName] = values
         return output
     }
 
-    @objc public func getTypes(types: [String]) -> Set<HKSampleType> {
+    @objc public func getTypes() -> Set<HKSampleType> {
         var retTypes: Set<HKSampleType> = [];
-        for type in types {
-            switch type {
-            case "height":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)!)
-            case "weight":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)!)
-            case "leanMass":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)!)
-            case "bmi":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!)
-            case "bodyFat":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!)
-            case "waist":
-                retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)!)
-            default:
-                print("no match in case")
-            }
-        }
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.leanBodyMass)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!)
+        retTypes.insert(HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.waistCircumference)!)
         return retTypes
     }
 }
