@@ -57,33 +57,46 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
         return measurement;
     }
     
-    @objc public func processResult(typeName: String, results: [HKQuantitySample]) -> [String: [String: Any]] {
-        var output: [String: [String: Any]] = [:]
+    @objc public func processResult(typeName: String, results: [HKQuantitySample]) -> [String: [Any]] {
+        var output: [String: [Any]] = [:]
+        var values: [Any] = []
         for result in results {
+            var factor: Double?
             var unitName: String?
-                var unit: HKUnit?
-                if result.quantity.is(compatibleWith: HKUnit.meter()) {
-                    unitName = "metre"
-                    unit = HKUnit.meter()
-                } else if result.quantity.is(compatibleWith: HKUnit.gram()) {
-                    unitName = "gram"
-                    unit = HKUnit.gram()
-                } else if result.quantity.is(compatibleWith: HKUnit.percent()) {
-                    unitName = "percentage"
-                    unit = HKUnit.percent()
-                } else if result.quantity.is(compatibleWith: HKUnit.count()) {
-                    unitName = "count"
-                    unit = HKUnit.count()
-                } else {
-                    print("Error: Unknown unit type: ", result.quantity)
-                }
-                let value = result.quantity.doubleValue(for: unit!)
-            output[typeName] = ["start": ISO8601DateFormatter().string(from: result.startDate),
-                               "end": ISO8601DateFormatter().string(from: result.endDate),
-                               "units": unitName!,
-                               "value": value
-                ]
+            var unit: HKUnit?
+            if result.quantity.is(compatibleWith: HKUnit.meter()) {
+                unitName = "metre"
+                unit = HKUnit.meter()
+                factor = 0.01
+            } else if result.quantity.is(compatibleWith: HKUnit.gram()) {
+                unitName = "kilogram"
+                unit = HKUnit.gram()
+                factor = 1000
+            } else if result.quantity.is(compatibleWith: HKUnit.percent()) {
+                unitName = "percentage"
+                unit = HKUnit.percent()
+            } else if result.quantity.is(compatibleWith: HKUnit.count()) {
+                unitName = "count"
+                unit = HKUnit.count()
+            } else {
+                print("Error: Unknown unit type: ", result.quantity)
+            }
+            // Divide by factor - convert grams to Kg for weight, m to cm for waist
+            var value: Double
+            if(factor != nil) {
+                value = result.quantity.doubleValue(for: unit!) / factor!
+            } else {
+                value = result.quantity.doubleValue(for: unit!)
+            }
+            values.append([
+                "startDate": ISO8601DateFormatter().string(from: result.startDate),
+                "endDate": ISO8601DateFormatter().string(from: result.endDate),
+                "units": unitName!,
+                "value": value,
+                "sourceBundleId": "com.apple.Health"
+                ])
         }
+        output[typeName] = values
         return output
     }
 
