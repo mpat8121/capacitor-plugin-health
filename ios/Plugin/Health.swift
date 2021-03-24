@@ -45,7 +45,7 @@ public typealias Measurement = (unit: HKUnit?, type: HKQuantityType?)
             case "bmi":
                 measurement.unit = HKUnit.count()
                 measurement.type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMassIndex)!
-            case "bodyFat":
+            case "fat_percentage":
                 measurement.unit = HKUnit.percent()
                 measurement.type = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyFatPercentage)!
             case "waist":
