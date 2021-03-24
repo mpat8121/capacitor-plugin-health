@@ -1,5 +1,6 @@
 package com.interapptive.plugins.health;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.Log;
@@ -21,9 +22,8 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResponse;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-
-import org.json.JSONException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -31,6 +31,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
 
 public class Health {
 
@@ -55,7 +57,11 @@ public class Health {
         if(apiResult == ConnectionResult.SUCCESS) {
             PackageManager pm = context.getPackageManager();
             try {
-                pm.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES);
+                // try get packageInfo - throw exception if not found
+               pm.getPackageInfo(
+                        "com.google.android.apps.fitness",
+                        PackageManager.GET_ACTIVITIES
+                );
                 return true;
             } catch (PackageManager .NameNotFoundException e) {
                 Log.e(tag, "Google Fit not installed");
@@ -123,11 +129,10 @@ public class Health {
                                 long end = datapoint.getEndTime(TimeUnit.MILLISECONDS);
                                 obj.put("startDate", start);
                                 obj.put("endDate", end);
+
                                 DataSource dataSource = datapoint.getOriginalDataSource();
-                                if (dataSource != null) {
-                                    String sourceBundleId = dataSource.getAppPackageName();
-                                    if (sourceBundleId != null) obj.put("sourceBundleId", sourceBundleId);
-                                }
+                                String sourceBundleId = dataSource.getAppPackageName();
+                                if (sourceBundleId != null) obj.put("sourceBundleId", sourceBundleId);
 
                                 //reference for fields:
                                 // https://developers.google.com/android/reference/com/google/android/gms/fitness/data/Field.html
@@ -177,18 +182,22 @@ public class Health {
      * Read Google Fit Data
      * @param data Data read params
      * @param dt Data Type
-     * @return
-     * @throws ParseException
+     * @return Result of dataReadResponse
+     * @throws ParseException exception from date parse
      */
     public DataReadResponse query(JSObject data, DataType dt) throws ParseException {
         String st = data.getString("startDate");
+        if(st == null) st = "";
         String et = data.getString("endDate");
+        if(et == null) et = "";
         final String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-        SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 
         Date startDate = sdf.parse(st);
+        assert startDate != null;
         long sDate = startDate.getTime();
         Date endDate = sdf.parse(et);
+        assert endDate != null;
         long eDate = endDate.getTime();
 
         String sourceBundleId = context.getApplicationContext().getPackageName();
@@ -200,35 +209,38 @@ public class Health {
                 .read(dt)
                 .setTimeRange(sDate, eDate, TimeUnit.MILLISECONDS)
                 .build();
-        Task<DataReadResponse> dataReadResponse = Fitness.getHistoryClient(context, account)
-                .readData(readRequest);
 
-        return dataReadResponse.getResult();
+        if(account != null) {
+            Task<DataReadResponse> dataReadResponse = Fitness.getHistoryClient(context, account)
+                    .readData(readRequest);
+            return dataReadResponse.getResult();
+        } else {
+            return null;
+        }
     }
 
     /**
-     *
-     * @param data
-     * @param dt
-     * @return
-     * @throws JSONException
-     * @throws ParseException
+     * Sends data to Google Fit
+     * @param data data to store
+     * @param dt DataType
+     * @throws ParseException exception from date parse
      */
-    public boolean store(JSObject data, DataType dt) throws ParseException {
+    public void store(JSObject data, DataType dt, PluginCall call) throws ParseException {
 
         String st = data.getString("startDate");
+        if(st == null) st = "";
         String et = data.getString("endDate");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        if(et == null) et = "";
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
         Date startDate = sdf.parse(st);
+        assert startDate != null;
         long sDate = startDate.getTime();
         Date endDate = sdf.parse(et);
+        assert endDate != null;
         long eDate = endDate.getTime();
 
         String sourceBundleId = context.getApplicationContext().getPackageName();
-        if (data.has("sourceBundleId")) {
-            sourceBundleId = data.getString("sourceBundleId");
-        }
 
         DataSource dataSrc = new DataSource.Builder()
                 .setAppPackageName(sourceBundleId)
@@ -240,30 +252,36 @@ public class Health {
         DataPoint.Builder dataPointBuilder = DataPoint.builder(dataSrc);
         dataPointBuilder.setTimeInterval(sDate, eDate, TimeUnit.MILLISECONDS);
 
-        if (dt.equals(DataType.TYPE_HEIGHT)) {
-            String value = data.getString("value");
-            float height = Float.parseFloat(value);
-            dataPointBuilder.setField(Field.FIELD_HEIGHT, height);
-        } else if (dt.equals(DataType.TYPE_WEIGHT)) {
-            String value = data.getString("value");
-            float weight = Float.parseFloat(value);
-            dataPointBuilder.setField(Field.FIELD_WEIGHT, weight);
-        } else if (dt.equals(DataType.TYPE_BODY_FAT_PERCENTAGE)) {
-            String value = data.getString("value");
-            float perc = Float.parseFloat(value);
-            dataPointBuilder.setField(Field.FIELD_PERCENTAGE, perc);
+        String value = data.getString("value");
+        if(value != null) {
+            if (dt.equals(DataType.TYPE_HEIGHT)) {
+                float height = Float.parseFloat(value);
+                dataPointBuilder.setField(Field.FIELD_HEIGHT, height);
+            } else if (dt.equals(DataType.TYPE_WEIGHT)) {
+                float weight = Float.parseFloat(value);
+                dataPointBuilder.setField(Field.FIELD_WEIGHT, weight);
+            } else if (dt.equals(DataType.TYPE_BODY_FAT_PERCENTAGE)) {
+                float percentage = Float.parseFloat(value);
+                dataPointBuilder.setField(Field.FIELD_PERCENTAGE, percentage);
+            }
+            dataSetBuilder.add(dataPointBuilder.build());
+
+            final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(context);
+
+            if(account != null) {
+                Fitness.getHistoryClient(context, account)
+                        .insertData(dataSetBuilder.build())
+                        .addOnCompleteListener(task -> {
+                            JSObject ret = new JSObject();
+                            if(task.isSuccessful()) {
+                                ret.put("message", "Data sent successfully");
+                            } else {
+                                ret.put("message", task.getException());
+                            }
+                            ret.put("success", task.isSuccessful());
+                            call.resolve(ret);
+                        });
+            }
         }
-        dataSetBuilder.add(dataPointBuilder.build());
-
-        final GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(context);
-
-        if(account != null) {
-            Task<Void> insertStatus = Fitness.getHistoryClient(context, account)
-                    .insertData(dataSetBuilder.build());
-            return insertStatus.isComplete();
-        } else {
-            return false;
-        }
-
     }
 }
