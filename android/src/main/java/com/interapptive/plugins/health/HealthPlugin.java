@@ -14,9 +14,6 @@ import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.result.DataReadResponse;
 
-import org.json.JSONException;
-
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,14 +22,13 @@ public class HealthPlugin extends Plugin {
     private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     private Context context;
     private Health implementation;
-    PluginCall call; // for passing between reqAuth() and processResponse()
     FitnessOptions fitnessOptions;
 
     // Declare data types compatible with plugin
     public static Map<String, DataType> datatypes = new HashMap<String, DataType>();
     private final String tag = "---- IA HEALTH PLUGIN";
     static {
-//        datatypes.put("height", DataType.TYPE_HEIGHT);
+        // dataTypes.put("height", DataType.TYPE_HEIGHT);
         datatypes.put("weight", DataType.TYPE_WEIGHT);
         datatypes.put("fat_percentage", DataType.TYPE_BODY_FAT_PERCENTAGE);
     }
@@ -44,8 +40,6 @@ public class HealthPlugin extends Plugin {
     public void load() {
         super.load();
         context = getContext();
-        // 1. Create a FitnessOptions instance, declaring the data types and access type
-
         // Optional for future implementation
         // .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_READ)
         // .addDataType(DataType.TYPE_HEIGHT, FitnessOptions.ACCESS_WRITE)
@@ -95,9 +89,7 @@ public class HealthPlugin extends Plugin {
                 fitnessOptions);
 
         if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-            this.call = call;
             Util.setCall(call);
-//            Util.setContext(context);
             GoogleSignIn.requestPermissions(
                     getActivity(),
                     GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
@@ -108,13 +100,13 @@ public class HealthPlugin extends Plugin {
             JSObject ret = new JSObject();
             ret.put("success", true);
             ret.put("message", "Connected to Google Fit");
-            this.call.resolve(ret);
+            call.resolve(ret);
         }
     }
 
     /**
      * Result of requestAuth function - called from MainActivity.java
-     * @param requestCode request code, i.e. GOOGLE_FIT_PERMISSIONS_REQUEST_CODE
+     * @param requestCode i.e. GOOGLE_FIT_PERMISSIONS_REQUEST_CODE
      */
     public void processActivityResult(int requestCode) {
         PluginCall savedCall = Util.getCall();
@@ -124,13 +116,13 @@ public class HealthPlugin extends Plugin {
             ret.put("message", "Connected to Google Fit");
         } else {
             ret.put("success", false);
-            ret.put("message", "Unable to connect");
+            ret.put("message", "Unable to connect or user cancelled");
         }
         savedCall.resolve(ret);
     }
 
     /**
-     *
+     * Return Google Fit data for one Data Type
      * @param call Capacitor Plugin Call
      */
     @PluginMethod
@@ -164,16 +156,27 @@ public class HealthPlugin extends Plugin {
             ret.put("message", "DataType " + dataType + " not supported");
             call.resolve(ret);
         }
+
         try {
             final DataReadResponse result = implementation.query(data, dt);
-            ret.put("success", result);
-            ret.put("message", "Query data retrieved");
+            if(result != null) {
+                ret.put("success", true);
+                ret.put("message", "Query data retrieved.");
+            } else {
+                ret.put("success", false);
+                ret.put("message", "Failed to get data, null account.");
+            }
+            ret.put("data", result);
             call.resolve(ret);
         } catch (Exception exception) {
             call.reject(exception.getMessage(),exception);
         }
     }
 
+    /**
+     * Get all Google Fit data in single call
+     * @param call Capacitor Plugin Call
+     */
     @PluginMethod
     public void queryAll(PluginCall call) {
         GoogleSignInAccount account = GoogleSignIn.getAccountForExtension(
@@ -191,7 +194,7 @@ public class HealthPlugin extends Plugin {
     }
 
     /**
-     *
+     * Store data in Google Fit
      * @param call Capacitor Plugin Call
      */
     @PluginMethod
@@ -240,14 +243,7 @@ public class HealthPlugin extends Plugin {
 
         if(valid) {
             try {
-                final Boolean result = implementation.store(data, dt);
-                ret.put("success", result);
-                if(result) {
-                    ret.put("message", "Measurement synced successfully.");
-                } else {
-                    ret.put("message", "Measurement sync failed or not logged in.");
-                }
-                call.resolve(ret);
+                implementation.store(data, dt, call);
             } catch (Exception exception) {
                 call.reject(exception.getMessage(), exception);
             }
