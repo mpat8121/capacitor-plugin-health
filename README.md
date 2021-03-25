@@ -1,12 +1,36 @@
-# capacitor-plugin-health
+<h3 align="center">Health</h3>
+<p align="center">Uses Capacitor 3.0</p>
 
-Integrates with Google Fit and Apple Health
+<p align="center">
+Capacitor 3.0 plugin for Android and iOS that 
+allows data to be sent and retrieved from Google Fit or Apple Health
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/maintenance/yes/2021?style=flat-square" />
+  <a href="https://github.com/mpat8121/capacitor-plugin-filesharer/actions?query=workflow%3A%22CI%22"><img src="https://img.shields.io/github/workflow/status/mpat8121/capacitor-plugin-filesharer/CI?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/capacitor-plugin-filesharer"><img src="https://img.shields.io/npm/l/capacitor-plugin-filesharer?style=flat-square" /></a>
+<br>
+  <a href="https://www.npmjs.com/package/capacitor-plugin-filesharer"><img src="https://img.shields.io/npm/dw/capacitor-plugin-filesharer?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/capacitor-plugin-filesharer"><img src="https://img.shields.io/npm/v/capacitor-plugin-filesharer?style=flat-square" /></a>
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+<a href="#contributors"><img src="https://img.shields.io/badge/all%20contributors-2-orange?style=flat-square" /></a>
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+</p>
+
+| Maintainer        | GitHub                                    | Social |
+| ----------------- | ----------------------------------------- | ------------------------------------------------------- |
+| Mick Patterson    | [mpat8121](https://github.com/mpat8121)   | [@Mick_Patterson_](https://twitter.com/Mick_Patterson_) |
+| G. Starr          | [g-starr](https://github.com/g-starr)     |     
 
 ## Install
 
 ```bash
 npm install capacitor-plugin-health
+npm run build or ionic build
 npx cap sync
+npx cap add android
+npx cap add ios
 ```
 
 ## API
@@ -182,3 +206,24 @@ Saves data in Health app
 | **`WAIST`**          | <code>'waist'</code>          | IOS ONLY - 'waist'             |
 
 </docgen-api>
+
+## Supported Methods
+
+| Name                    | Android | iOS | Web |
+| :---------------------- | :------ | :-- | :-- |
+| isAvailable                   | ✅      | ✅ | ❌ |
+| requestAuth           | ✅      | ✅ | ❌ |
+| query           | ✅      | ✅ | ❌ |
+| queryAll           | ✅      | ❌ | ❌ |
+| store           | ✅      | ✅ | ❌ |
+
+## Contributors
+
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/mpat8121"><img src="https://avatars3.githubusercontent.com/u/6610593?v=4" width="100px;" alt=""/><br /><sub><b>Mick Patterson</b></sub></a><br /><a href="https://github.com/mpat8121/capacitor-plugin-filesharer/commits?author=mpat8121" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/g-starr"><img src="https://avatars.githubusercontent.com/u/79553652?s=460&v=4" width="100px;" alt=""/><br /><sub><b>Graham Starr</b></sub></a><br /><a href="https://github.com/mpat8121/capacitor-plugin-filesharer/commits?author=Graei" title="Code">💻</a></td>    
+  </tr>
+</table>
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
