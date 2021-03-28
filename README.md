@@ -8,11 +8,11 @@ allows data to be sent and retrieved from Google Fit or Apple Health
 
 <p align="center">
   <img src="https://img.shields.io/maintenance/yes/2021?style=flat-square" />
-  <a href="https://github.com/mpat8121/capacitor-plugin-filesharer/actions?query=workflow%3A%22CI%22"><img src="https://img.shields.io/github/workflow/status/mpat8121/capacitor-plugin-filesharer/CI?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/capacitor-plugin-filesharer"><img src="https://img.shields.io/npm/l/capacitor-plugin-filesharer?style=flat-square" /></a>
+  <a href="https://github.com/mpat8121/capacitor-plugin-health/actions?query=workflow%3A%22CI%22"><img src="https://img.shields.io/github/workflow/status/mpat8121/capacitor-plugin-health/CI?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/capacitor-plugin-health"><img src="https://img.shields.io/npm/l/capacitor-plugin-health?style=flat-square" /></a>
 <br>
-  <a href="https://www.npmjs.com/package/capacitor-plugin-filesharer"><img src="https://img.shields.io/npm/dw/capacitor-plugin-filesharer?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/capacitor-plugin-filesharer"><img src="https://img.shields.io/npm/v/capacitor-plugin-filesharer?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/capacitor-plugin-health"><img src="https://img.shields.io/npm/dw/capacitor-plugin-health?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/capacitor-plugin-health"><img src="https://img.shields.io/npm/v/capacitor-plugin-health?style=flat-square" /></a>
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 <a href="#contributors"><img src="https://img.shields.io/badge/all%20contributors-2-orange?style=flat-square" /></a>
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
